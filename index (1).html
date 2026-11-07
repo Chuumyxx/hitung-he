@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#245b3f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Hitung HE</title>
+<style>
+:root {
+  --bg: #e9efe9;
+  --card: #ffffff;
+  --fg: #17231c;
+  --muted: #5d6e63;
+  --line: #dbe3dc;
+  --head: #eff4ef;
+  --accent: #245b3f;
+  --accent-fg: #ffffff;
+  --soft: #e1efe6;
+  --ghost: #ececec;
+  --field: #ffffff;
+  --field-line: #6b6b6b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1712;
+    --card: #17221b;
+    --fg: #e6efe8;
+    --muted: #98aa9e;
+    --line: #2b3a30;
+    --head: #1d2b22;
+    --accent: #4caf7d;
+    --accent-fg: #06180f;
+    --soft: #1f3326;
+    --ghost: #24332a;
+    --field: #101912;
+    --field-line: #8a9c8f;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 16px 12px 40px;
+}
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 12px;
+}
+h2 {
+  margin: 0 0 12px;
+  padding: 0 4px;
+  font-family: "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  font-stretch: condensed;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.desc { margin: 0 0 8px; padding: 0 4px; color: var(--muted); }
+.desc b { color: var(--fg); }
+.note { margin: 0 0 12px; padding: 0 4px; color: var(--muted); font-size: 0.85rem; }
+.note b { color: var(--fg); }
+
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  background: var(--head);
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 8px 3px;
+  text-align: center;
+  line-height: 1.15;
+}
+td {
+  padding: 8px 3px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+td.batch { text-align: left; font-weight: 600; white-space: nowrap; padding-left: 6px; }
+td.out { color: var(--muted); }
+td.out.has { color: var(--fg); }
+td.tot.has { font-weight: 700; }
+tr.sum td { background: var(--soft); font-weight: 700; border-bottom: 0; border-top: 2px solid var(--line); }
+tr.sum td.batch { text-transform: uppercase; }
+
+input[type="text"] {
+  width: 76px;
+  height: 44px;
+  padding: 0 6px;
+  font: 600 16px system-ui, sans-serif;
+  text-align: center;
+  color: var(--fg);
+  background: var(--field);
+  border: 1.5px solid var(--field-line);
+  border-radius: 6px;
+}
+input[type="text"]:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+button { font: inherit; cursor: pointer; border-radius: 8px; }
+button.pk {
+  width: 48px;
+  height: 44px;
+  font-weight: 700;
+  color: var(--fg);
+  background: var(--field);
+  border: 1.5px solid var(--line);
+}
+button.pk:active { background: var(--soft); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding: 0 4px; }
+.actions button { height: 48px; padding: 0 20px; font-weight: 600; font-size: 1rem; border: 0; }
+.btn-main { background: var(--accent); color: var(--accent-fg); }
+.btn-main:active { filter: brightness(0.9); }
+.btn-ghost { background: var(--ghost); color: var(--fg); }
+
+.slip-top { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 4px 12px; }
+.slip-top label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+.slip-top input[type="text"] { width: 100%; }
+.slip-meta { display: flex; gap: 20px; margin: 0 4px 10px; color: var(--muted); font-size: 0.9rem; }
+.slip-meta b { color: var(--fg); font-variant-numeric: tabular-nums; }
+#sec-slip td { font-weight: 500; }
+tr.sum2 td { background: var(--soft); font-weight: 700; border-bottom: 0; }
+tr.sum2 td.batch { text-transform: none; }
+#sj-t { font-size: 1.1rem; }
+
+@media (max-width: 460px) {
+  body { padding: 12px 8px 40px; }
+  .card { padding: 14px 8px; }
+  th { font-size: 0.62rem; padding: 6px 1px; }
+  td { padding: 6px 1px; font-size: 0.82rem; }
+  td.batch { padding-left: 4px; font-size: 0.82rem; }
+  input[type="text"] { width: 62px; padding: 0 3px; }
+  button.pk { width: 40px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function () {
+  var KEY = "hitung-he-v1";
+  var BATCHES = [15, 16, 17, 18];
+  var nf = new Intl.NumberFormat("id-ID");
+
+  var SECS = [
+    {
+      id: "he", title: "Hitung HE", hasPack: true,
+      head: ["Batch ID", "Keranjang isi", "Butir datang", "Keranjang", "Tray", "Eceran", "Total"],
+    },
+    {
+      id: "koli", title: "Hitung Koli 360", hasPack: false, pack: 360, subSize: 30,
+      head: ["Batch ID", "Butir datang", "Koli", "Rak", "Eceran", "Total"],
+    }
+  ];
+  var SUB = { 180: 36, 210: 42 };
+
+  function defaults() {
+    return {
+      he: { 15: { p: 180, v: "" }, 16: { p: 180, v: "" }, 17: { p: 210, v: "" }, 18: { p: 210, v: "" } },
+      koli: { 15: "", 16: "", 17: "", 18: "" }
+    };
+  }
+  function load() {
+    var d = defaults();
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY));
+      if (s && s.he && s.koli) {
+        BATCHES.forEach(function (b) {
+          if (s.he[b]) {
+            d.he[b].p = s.he[b].p === 210 ? 210 : 180;
+            d.he[b].v = String(s.he[b].v || "").replace(/\D/g, "");
+          }
+          if (s.koli[b] != null) d.koli[b] = String(s.koli[b]).replace(/\D/g, "");
+        });
+      }
+    } catch (e) {}
+    return d;
+  }
+  var state = load();
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  function fmt(n) { return nf.format(n); }
+  function split(total, pack, subSize) {
+    var full = Math.floor(total / pack);
+    var rest = total - full * pack;
+    var sub = Math.floor(rest / subSize);
+    return { full: full, sub: sub, ecer: rest - sub * subSize };
+  }
+
+  var app = document.getElementById("app");
+
+  function build(sec) {
+    var h = '<section class="card" id="sec-' + sec.id + '"><h2>' + sec.title + '</h2>' +
+      '<div class="scroll"><table><thead><tr>' +
+      sec.head.map(function (t) { return "<th>" + t + "</th>"; }).join("") +
+      "</tr></thead><tbody>";
+    BATCHES.forEach(function (b) {
+      h += '<tr data-b="' + b + '"><td class="batch">Batch ' + b + "</td>";
+      if (sec.hasPack) {
+        h += '<td><button type="button" class="pk" data-b="' + b + '" aria-label="Keranjang isi batch ' + b + '">' + state.he[b].p + "</button></td>";
+      }
+      h += '<td><input type="text" inputmode="numeric" autocomplete="off" id="' + sec.id + "-" + b +
+        '" aria-label="Butir datang batch ' + b + '" data-b="' + b + '"></td>' +
+        '<td class="out o-full">-</td><td class="out o-sub">-</td><td class="out o-ecer">-</td><td class="out tot o-tot">-</td></tr>';
+    });
+    h += '<tr class="sum"><td class="batch" colspan="' + (sec.hasPack ? 2 : 1) + '">Total</td>' +
+      '<td class="s-butir">-</td><td class="s-full">-</td><td class="s-sub">-</td><td class="s-ecer">-</td><td class="s-tot">-</td></tr>';
+    h += '</tbody></table></div><div class="actions">' +
+      '<button type="button" class="btn-main" data-act="rinci">Rinci</button>' +
+      '<button type="button" class="btn-ghost" data-act="clear">Kosongkan</button>' +
+      '<button type="button" class="btn-ghost" data-act="copy">Salin</button></div></section>';
+    return h;
+  }
+
+  app.innerHTML = SECS.map(build).join("") + slipHtml();
+
+  function slipHtml() {
+    var h = '<section class="card" id="sec-slip"><h2>Ringkasan Rett</h2>' +
+      '<p class="desc">Terisi otomatis dari <b>Hitung HE</b> (kolom Krjg) dan <b>Hitung Koli 360</b> (kolom Dus HE). Dus HE artinya koli. Nomor Rett dan jam tiba diisi manual.</p>' +
+      '<div class="slip-top">' +
+      '<div><label for="rett">Rett</label><input type="text" id="rett" inputmode="numeric" autocomplete="off" placeholder="003"></div>' +
+      '<div><label for="jam">Jam tiba (WIT)</label><input type="text" id="jam" inputmode="decimal" autocomplete="off" placeholder="19.30"></div>' +
+      '</div>' +
+      '<div class="slip-meta"><span>T.42 : <b id="t42">-</b></span><span>T.36 : <b id="t36">-</b></span></div>' +
+      '<div class="scroll"><table><thead><tr><th>Batch ID</th><th>Krjg</th><th>Dus HE</th><th>Jmlh. HE</th></tr></thead><tbody>';
+    BATCHES.forEach(function (b) {
+      h += '<tr><td class="batch">' + b + '</td><td id="sk-' + b + '">-</td><td id="sd-' + b + '">-</td><td id="sj-' + b + '">-</td></tr>';
+    });
+    h += '<tr class="sum"><td class="batch">Total</td><td id="sk-t">-</td><td id="sd-t">-</td><td></td></tr>' +
+      '<tr class="sum2"><td class="batch" colspan="3">Jumlah Koli : <span id="skoli">-</span></td><td id="sj-t">-</td></tr>' +
+      '</tbody></table></div><div class="actions"><button type="button" class="btn-ghost" data-act="copy">Salin</button></div></section>';
+    return h;
+  }
+
+  function slip() {
+    var tk = 0, td = 0, t42 = 0, t36 = 0;
+    function put(id, n) { document.getElementById(id).textContent = n > 0 ? fmt(n) : "-"; }
+    BATCHES.forEach(function (b) {
+      var k = val(SECS[0], b), d = val(SECS[1], b);
+      put("sk-" + b, k); put("sd-" + b, d); put("sj-" + b, k + d);
+      tk += k; td += d;
+      if (k > 0) {
+        var p = state.he[b].p;
+        var r = split(k, p, SUB[p]);
+        if (p === 210) t42 += r.sub; else t36 += r.sub;
+      }
+    });
+    put("sk-t", tk); put("sd-t", td); put("sj-t", tk + td);
+    put("t42", t42); put("t36", t36);
+    var kt = "-";
+    if (td > 0) {
+      var q = split(td, 360, 30), parts = [];
+      if (q.full) parts.push(fmt(q.full) + " koli");
+      if (q.sub) parts.push(q.sub + " rak");
+      if (q.ecer) parts.push(q.ecer + " eceran");
+      kt = parts.join(" + ");
+    }
+    document.getElementById("skoli").textContent = kt;
+  }
+
+  function val(sec, b) {
+    var raw = sec.id === "he" ? state.he[b].v : state.koli[b];
+    return raw === "" ? 0 : parseInt(raw, 10);
+  }
+
+  function setCell(el, text, has) {
+    el.textContent = text;
+    el.classList.toggle("has", !!has);
+  }
+
+  function clearOut(sec) {
+    var root = document.getElementById("sec-" + sec.id);
+    root.querySelectorAll("td.out").forEach(function (c) { setCell(c, "-", false); });
+    ["s-butir", "s-full", "s-sub", "s-ecer", "s-tot"].forEach(function (k) {
+      root.querySelector("." + k).textContent = "-";
+    });
+  }
+
+  function rinci(sec) {
+    var root = document.getElementById("sec-" + sec.id);
+    var sums = { butir: 0, full: 0, sub: 0, ecer: 0 };
+    var any = false;
+    BATCHES.forEach(function (b) {
+      var row = root.querySelector('tr[data-b="' + b + '"]');
+      var v = val(sec, b);
+      var cells = ["o-full", "o-sub", "o-ecer", "o-tot"].map(function (k) { return row.querySelector("." + k); });
+      if (v <= 0) { cells.forEach(function (c) { setCell(c, "-", false); }); return; }
+      var pack = sec.hasPack ? state.he[b].p : sec.pack;
+      var subSize = sec.hasPack ? SUB[pack] : sec.subSize;
+      var r = split(v, pack, subSize);
+      setCell(cells[0], r.full ? fmt(r.full) : "-", r.full);
+      setCell(cells[1], r.sub ? fmt(r.sub) : "-", r.sub);
+      setCell(cells[2], r.ecer ? fmt(r.ecer) : "-", r.ecer);
+      setCell(cells[3], fmt(r.full * pack + r.sub * subSize + r.ecer), true);
+      sums.butir += v; sums.full += r.full; sums.sub += r.sub; sums.ecer += r.ecer;
+      any = true;
+    });
+    function put(k, n) { root.querySelector("." + k).textContent = any && n ? fmt(n) : "-"; }
+    put("s-butir", sums.butir); put("s-full", sums.full); put("s-sub", sums.sub);
+    put("s-ecer", sums.ecer); put("s-tot", sums.butir);
+  }
+
+  SECS.forEach(function (sec) {
+    var root = document.getElementById("sec-" + sec.id);
+    var inputs = BATCHES.map(function (b) { return document.getElementById(sec.id + "-" + b); });
+
+    inputs.forEach(function (inp, i) {
+      var b = BATCHES[i];
+      inp.value = sec.id === "he" ? state.he[b].v : state.koli[b];
+
+      inp.addEventListener("input", function () {
+        var clean = inp.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+        if (clean !== inp.value) inp.value = clean;
+        if (sec.id === "he") state.he[b].v = clean; else state.koli[b] = clean;
+        save();
+        clearOut(sec);
+        slip();
+      });
+
+      inp.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (i === inputs.length - 1) { rinci(sec); inp.blur(); } else inputs[i + 1].focus();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (i < inputs.length - 1) inputs[i + 1].focus();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (i > 0) inputs[i - 1].focus();
+        }
+      });
+      inp.addEventListener("focus", function () { try { inp.select(); } catch (e) {} });
+    });
+
+    if (sec.hasPack) {
+      root.querySelectorAll("button.pk").forEach(function (btn) {
+        var b = btn.getAttribute("data-b");
+        function setPack(p) {
+          state.he[b].p = p;
+          btn.textContent = p;
+          save();
+          clearOut(sec);
+          slip();
+        }
+        btn.addEventListener("click", function () { setPack(state.he[b].p === 180 ? 210 : 180); });
+        btn.addEventListener("keydown", function (e) {
+          if (e.key === "1") setPack(180);
+          else if (e.key === "2") setPack(210);
+        });
+      });
+    }
+
+    root.querySelector('[data-act="rinci"]').addEventListener("click", function () { rinci(sec); });
+    root.querySelector('[data-act="clear"]').addEventListener("click", function () {
+      BATCHES.forEach(function (b, i) {
+        if (sec.id === "he") state.he[b].v = ""; else state.koli[b] = "";
+        inputs[i].value = "";
+      });
+      save();
+      clearOut(sec);
+      slip();
+      inputs[0].focus();
+    });
+
+    root.querySelector('[data-act="copy"]').addEventListener("click", function () {
+      copyText(this, textSec(sec));
+    });
+
+    if (BATCHES.some(function (b) { return val(sec, b) > 0; })) rinci(sec);
+  });
+
+  (function () {
+    var RKEY = KEY + "-rett";
+    var s = {};
+    try { s = JSON.parse(localStorage.getItem(RKEY)) || {}; } catch (e) {}
+    var r = document.getElementById("rett"), j = document.getElementById("jam");
+    r.value = String(s.r || "").replace(/\D/g, "");
+    j.value = String(s.j || "").replace(/[^\d.:]/g, "");
+    function sv() { try { localStorage.setItem(RKEY, JSON.stringify({ r: r.value, j: j.value })); } catch (e) {} }
+    r.addEventListener("input", function () { r.value = r.value.replace(/\D/g, ""); sv(); });
+    j.addEventListener("input", function () { j.value = j.value.replace(/[^\d.:]/g, ""); sv(); });
+  })();
+
+  document.querySelector('#sec-slip [data-act="copy"]').addEventListener("click", function () {
+    copyText(this, textSlip());
+  });
+
+  function textSec(sec) {
+    var lines = [], tot = 0;
+    BATCHES.forEach(function (b) {
+      var v = val(sec, b);
+      if (v <= 0) return;
+      var pack = sec.hasPack ? state.he[b].p : sec.pack;
+      var subSize = sec.hasPack ? SUB[pack] : sec.subSize;
+      var r = split(v, pack, subSize), parts = [];
+      if (r.full) parts.push(fmt(r.full) + (sec.hasPack ? " krj" : " koli"));
+      if (r.sub) parts.push(r.sub + (sec.hasPack ? " tray" : " rak"));
+      if (r.ecer) parts.push(r.ecer + " eceran");
+      lines.push("Batch " + b + (sec.hasPack ? " (krj " + pack + ")" : "") + " : " + parts.join(" + ") + " | " + fmt(v));
+      tot += v;
+    });
+    if (!lines.length) return "";
+    return sec.title.toUpperCase() + "\n" + lines.join("\n") + "\nTotal : " + fmt(tot);
+  }
+
+  function textSlip() {
+    function g(id) { return document.getElementById(id).textContent; }
+    var rett = document.getElementById("rett").value, jam = document.getElementById("jam").value;
+    var lines = [];
+    BATCHES.forEach(function (b) {
+      if (g("sj-" + b) === "-") return;
+      lines.push("Batch " + b + " : Krjg " + g("sk-" + b) + " | Dus HE " + g("sd-" + b) + " | Jmlh " + g("sj-" + b));
+    });
+    if (!lines.length) return "";
+    var head = "RINGKASAN RETT" + (rett ? " " + rett : "") + (jam ? " | " + jam + " WIT" : "");
+    return head + "\nT.42 : " + g("t42") + "\nT.36 : " + g("t36") + "\n" + lines.join("\n") +
+      "\nTotal : Krjg " + g("sk-t") + " | Dus HE " + g("sd-t") +
+      "\nJumlah Koli : " + g("skoli") + "\nJmlh. HE : " + g("sj-t");
+  }
+
+  function flash(btn, msg) {
+    var o = btn.getAttribute("data-label") || btn.textContent;
+    btn.setAttribute("data-label", o);
+    btn.textContent = msg;
+    clearTimeout(btn._t);
+    btn._t = setTimeout(function () { btn.textContent = o; }, 1800);
+  }
+
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { ta.setSelectionRange(0, text.length); } catch (e) {}
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function copyText(btn, text) {
+    if (!text) { flash(btn, "Belum ada data"); return; }
+    if (legacyCopy(text)) { flash(btn, "Tersalin"); return; }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { flash(btn, "Tersalin"); }, function () { flash(btn, "Gagal menyalin"); });
+        return;
+      }
+    } catch (e) {}
+    flash(btn, "Gagal menyalin");
+  }
+
+  slip();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
