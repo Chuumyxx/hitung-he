@@ -136,6 +136,7 @@ button.pk:active { background: var(--soft); }
 tr.sum2 td { background: var(--soft); font-weight: 700; border-bottom: 0; }
 tr.sum2 td.batch { text-transform: none; }
 #sj-t { font-size: 1.1rem; }
+.foot { margin: 0; text-align: center; color: var(--muted); font-size: 0.8rem; }
 
 @media (max-width: 460px) {
   body { padding: 12px 8px 40px; }
@@ -156,6 +157,16 @@ tr.sum2 td.batch { text-transform: none; }
   var KEY = "hitung-he-v1";
   var BATCHES = [15, 16, 17, 18];
   var nf = new Intl.NumberFormat("id-ID");
+
+  // Batas pakai aplikasi. Ubah dua baris ini kalau mau diperpanjang.
+  var BATAS = new Date("2026-11-14T23:59:59+09:00");
+  var BATAS_TEKS = "Sabtu, 14 November 2026";
+  if (new Date() > BATAS) {
+    document.getElementById("app").innerHTML =
+      '<section class="card"><h2>Masa pakai berakhir</h2>' +
+      '<p class="desc">Aplikasi ini hanya berlaku sampai ' + BATAS_TEKS + '. Hubungi pemilik aplikasi untuk memperpanjang.</p></section>';
+    return;
+  }
 
   var SECS = [
     {
@@ -228,10 +239,12 @@ tr.sum2 td.batch { text-transform: none; }
   }
 
   app.innerHTML = SECS.map(build).join("") + slipHtml();
+  var sisa = Math.floor((BATAS - new Date()) / 86400000);
+  app.insertAdjacentHTML("beforeend", '<p class="foot">Berlaku sampai ' + BATAS_TEKS + ' · ' +
+    (sisa > 0 ? 'sisa ' + sisa + ' hari' : 'berakhir hari ini pukul 23.59') + '</p>');
 
   function slipHtml() {
     var h = '<section class="card" id="sec-slip"><h2>Ringkasan Rett</h2>' +
-      '<p class="desc">Terisi otomatis dari <b>Hitung HE</b> (kolom Krjg) dan <b>Hitung Koli 360</b> (kolom Dus HE). Dus HE artinya koli. Nomor Rett dan jam tiba diisi manual.</p>' +
       '<div class="slip-top">' +
       '<div><label for="rett">Rett</label><input type="text" id="rett" inputmode="numeric" autocomplete="off" placeholder="003"></div>' +
       '<div><label for="jam">Jam tiba (WIT)</label><input type="text" id="jam" inputmode="decimal" autocomplete="off" placeholder="19.30"></div>' +
