@@ -58,7 +58,7 @@ body {
   padding: 16px 12px;
 }
 h2 {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   padding: 0 4px;
   font-family: "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
   font-stretch: condensed;
@@ -161,14 +161,10 @@ tr.sum2 td.batch { text-transform: none; }
     {
       id: "he", title: "Hitung HE", hasPack: true,
       head: ["Batch ID", "Keranjang isi", "Butir datang", "Keranjang", "Tray", "Eceran", "Total"],
-      desc: "Isi jumlah butir HE yang datang per Batch ID, pilih jenis keranjang tiap batch (210 atau 180), lalu tekan <b>Rinci</b>. Hasilnya dipecah menjadi keranjang penuh, tray penuh, dan eceran. Hanya alat hitung, <b>tidak mengubah stok</b>.",
-      note: "Keranjang 210 = 5 tray × 42 butir. Keranjang 180 = 5 tray × 36 butir. Pindah kotak dengan tombol panah atau Enter (Enter di Batch 18 = Rinci). Ketuk kotak <b>Keranjang isi</b> untuk ganti 180 atau 210 (atau ketik 1 untuk 180, 2 untuk 210). Isian terakhir <b>tersimpan otomatis</b>."
     },
     {
       id: "koli", title: "Hitung Koli 360", hasPack: false, pack: 360, subSize: 30,
       head: ["Batch ID", "Butir datang", "Koli", "Rak", "Eceran", "Total"],
-      desc: "Isi jumlah butir HE per Batch ID, lalu tekan <b>Rinci</b>. Hasilnya dipecah menjadi koli penuh, rak penuh, dan eceran. <b>Tidak mengubah stok.</b>",
-      note: "1 koli = 360 butir = 12 rak. 1 rak = 30 butir. Pindah kotak dengan tombol panah atas dan bawah atau Enter (Enter di Batch 18 = Rinci). Isian terakhir <b>tersimpan otomatis</b>."
     }
   ];
   var SUB = { 180: 36, 210: 42 };
@@ -210,7 +206,6 @@ tr.sum2 td.batch { text-transform: none; }
 
   function build(sec) {
     var h = '<section class="card" id="sec-' + sec.id + '"><h2>' + sec.title + '</h2>' +
-      '<p class="desc">' + sec.desc + '</p><p class="note">' + sec.note + '</p>' +
       '<div class="scroll"><table><thead><tr>' +
       sec.head.map(function (t) { return "<th>" + t + "</th>"; }).join("") +
       "</tr></thead><tbody>";
