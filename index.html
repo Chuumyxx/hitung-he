@@ -158,10 +158,22 @@ tr.sum2 td.batch { text-transform: none; }
   var BATCHES = [15, 16, 17, 18];
   var nf = new Intl.NumberFormat("id-ID");
 
-  // Batas pakai aplikasi. Ubah dua baris ini kalau mau diperpanjang.
+  // Batas pakai untuk pengguna biasa (teman). Ubah dua baris tanggal ini kalau mau diperpanjang.
   var BATAS = new Date("2026-11-14T23:59:59+09:00");
   var BATAS_TEKS = "Sabtu, 14 November 2026";
-  if (new Date() > BATAS) {
+  // Pemilik: buka alamat aplikasi + ?pemilik=KODE satu kali di HP, setelah itu HP itu bebas batas.
+  var KUNCI = "hehd0qskgkec";
+  var PKEY = "hitung-he-pemilik";
+  var pemilik = false;
+  try {
+    var kode = new URLSearchParams(location.search).get("pemilik");
+    if (kode === KUNCI) {
+      localStorage.setItem(PKEY, "1");
+      if (window.history && history.replaceState) history.replaceState(null, "", location.pathname);
+    }
+    pemilik = localStorage.getItem(PKEY) === "1";
+  } catch (e) {}
+  if (!pemilik && new Date() > BATAS) {
     document.getElementById("app").innerHTML =
       '<section class="card"><h2>Masa pakai berakhir</h2>' +
       '<p class="desc">Aplikasi ini hanya berlaku sampai ' + BATAS_TEKS + '. Hubungi pemilik aplikasi untuk memperpanjang.</p></section>';
@@ -240,8 +252,8 @@ tr.sum2 td.batch { text-transform: none; }
 
   app.innerHTML = SECS.map(build).join("") + slipHtml();
   var sisa = Math.floor((BATAS - new Date()) / 86400000);
-  app.insertAdjacentHTML("beforeend", '<p class="foot">Berlaku sampai ' + BATAS_TEKS + ' · ' +
-    (sisa > 0 ? 'sisa ' + sisa + ' hari' : 'berakhir hari ini pukul 23.59') + '</p>');
+  app.insertAdjacentHTML("beforeend", '<p class="foot">' + (pemilik ? 'Mode pemilik · tanpa batas waktu' :
+    'Berlaku sampai ' + BATAS_TEKS + ' · ' + (sisa > 0 ? 'sisa ' + sisa + ' hari' : 'berakhir hari ini pukul 23.59')) + '</p>');
 
   function slipHtml() {
     var h = '<section class="card" id="sec-slip"><h2>Ringkasan Rett</h2>' +
