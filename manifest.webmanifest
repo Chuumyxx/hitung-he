@@ -1,0 +1,17 @@
+{
+  "name": "Hitung HE",
+  "short_name": "Hitung HE",
+  "description": "Rincian HE per batch: keranjang, tray, koli, rak, eceran",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e9efe9",
+  "theme_color": "#245b3f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
