@@ -147,6 +147,19 @@ tr.sum2 td.batch { text-transform: none; }
   input[type="text"] { width: 62px; padding: 0 3px; }
   button.pk { width: 40px; }
 }
+input[type="text"].wide { width: 100%; max-width: 280px; text-transform: uppercase; letter-spacing: 0.05em; }
+.gate-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-top: 12px; }
+.gate-msg { margin: 10px 4px 0; text-align: center; font-size: 0.9rem; color: var(--muted); }
+.gate-msg.err { color: #b3261e; }
+.kode-out { margin: 12px 4px 0; text-align: center; font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.tabs { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; padding: 8px 0; background: var(--bg); }
+.tabs button { flex: 1; height: 46px; font-weight: 700; font-size: 1rem; color: var(--fg); background: var(--ghost); border: 1.5px solid transparent; }
+.tabs button.on { background: var(--accent); color: var(--accent-fg); }
+.tabs button i { font-style: normal; font-size: 0.7rem; margin-left: 4px; opacity: 0.8; }
+#sec-gab td.l, #sec-gab th.l { text-align: left; }
+.gab-sub { margin: 14px 0 6px; padding: 0 4px; font-size: 0.8rem; color: var(--muted); }
+.hari { margin: 0; text-align: center; font-weight: 700; font-size: 1rem; }
+.hari small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.8rem; color: #d9534f; }
 </style>
 </head>
 <body>
@@ -158,26 +171,92 @@ tr.sum2 td.batch { text-transform: none; }
   var BATCHES = [15, 16, 17, 18];
   var nf = new Intl.NumberFormat("id-ID");
 
-  // Batas pakai untuk pengguna biasa (teman). Ubah dua baris tanggal ini kalau mau diperpanjang.
-  var BATAS = new Date("2026-11-14T23:59:59+09:00");
-  var BATAS_TEKS = "Sabtu, 14 November 2026";
-  // Pemilik: buka alamat aplikasi + ?pemilik=KODE satu kali di HP, setelah itu HP itu bebas batas.
-  var KUNCI = "hehd0qskgkec";
+  // Akses teman: kode berisi tanggal habis + tanda pengaman. Pemilik membuat kode lewat kartu "Buat kode teman".
+  var RAHASIA = "he-jpr-9f3k2xq7m1";
   var PKEY = "hitung-he-pemilik";
-  var pemilik = false;
+  var CKEY = "hitung-he-kode";
+  var KUNCI = "hehd0qskgkec";
+  var WIT = 9 * 3600000;
+
+  function hash(str) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0; i < str.length; i++) {
+      var c = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ c, 2654435761);
+      h2 = Math.imul(h2 ^ c, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  function sig(ymd) { return hash(RAHASIA + "|" + ymd).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(-5).padStart(5, "0"); }
+  function p2(n) { return (n < 10 ? "0" : "") + n; }
+  function witParts(ms) {
+    var d = new Date(ms + WIT);
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() };
+  }
+  var HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  var BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  function teksTgl(ms) {
+    var d = new Date(ms + WIT);
+    return HARI[d.getUTCDay()] + ", " + d.getUTCDate() + " " + BULAN[d.getUTCMonth()] + " " + d.getUTCFullYear();
+  }
+  function endOf(y, m, d) { return Date.UTC(y, m - 1, d, 23, 59, 59) - WIT; }
+  // hasil: {ok:true, end:ms} | {ok:false, why:"format"|"salah"|"habis", end:ms}
+  function cekKode(raw) {
+    var k = String(raw || "").trim().toUpperCase().replace(/\s+/g, "");
+    var m = /^HE-(\d{6})-([A-Z0-9]{5})$/.exec(k);
+    if (!m) return { ok: false, why: "format" };
+    if (sig(m[1]) !== m[2]) return { ok: false, why: "salah" };
+    var y = 2000 + parseInt(m[1].slice(0, 2), 10), mo = parseInt(m[1].slice(2, 4), 10), d = parseInt(m[1].slice(4, 6), 10);
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return { ok: false, why: "salah" };
+    var end = endOf(y, mo, d);
+    if (Date.now() > end) return { ok: false, why: "habis", end: end, kode: k };
+    return { ok: true, end: end, kode: k };
+  }
+  function buatKode(hari) {
+    var t = witParts(Date.now() + (hari - 1) * 86400000);
+    var ymd = p2(t.y % 100) + p2(t.m) + p2(t.d);
+    return { kode: "HE-" + ymd + "-" + sig(ymd), end: endOf(t.y, t.m, t.d) };
+  }
+
+  var pemilik = false, akses = null;
   try {
-    var kode = new URLSearchParams(location.search).get("pemilik");
-    if (kode === KUNCI) {
+    var q = new URLSearchParams(location.search).get("pemilik");
+    if (q === KUNCI) {
       localStorage.setItem(PKEY, "1");
       if (window.history && history.replaceState) history.replaceState(null, "", location.pathname);
     }
     pemilik = localStorage.getItem(PKEY) === "1";
   } catch (e) {}
-  if (!pemilik && new Date() > BATAS) {
-    document.getElementById("app").innerHTML =
-      '<section class="card"><h2>Masa pakai berakhir</h2>' +
-      '<p class="desc">Aplikasi ini hanya berlaku sampai ' + BATAS_TEKS + '. Hubungi pemilik aplikasi untuk memperpanjang.</p></section>';
-    return;
+  if (!pemilik) {
+    var tersimpan = "";
+    try { tersimpan = localStorage.getItem(CKEY) || ""; } catch (e) {}
+    akses = cekKode(tersimpan);
+    if (!akses.ok) {
+      var pesan = "", err = false;
+      if (akses.why === "habis") { pesan = "Kode berakhir pada " + teksTgl(akses.end) + ". Minta kode baru ke pemilik aplikasi."; err = true; }
+      document.getElementById("app").innerHTML =
+        '<section class="card"><h2>Kode akses</h2>' +
+        '<div class="gate-row"><input type="text" class="wide" id="gate-in" placeholder="HE-000000-XXXXX" autocomplete="off" autocapitalize="characters" aria-label="Kode akses">' +
+        '<button type="button" class="btn-main" id="gate-ok" style="height:48px;padding:0 20px;border:0;font-weight:600;font-size:1rem">Masuk</button></div>' +
+        '<p class="gate-msg' + (err ? ' err' : '') + '" id="gate-msg">' + pesan + '</p></section>';
+      var gin = document.getElementById("gate-in"), gmsg = document.getElementById("gate-msg");
+      function masuk() {
+        var r = cekKode(gin.value);
+        if (r.ok) {
+          try { localStorage.setItem(CKEY, r.kode); } catch (e) {}
+          location.reload();
+          return;
+        }
+        gmsg.className = "gate-msg err";
+        gmsg.textContent = r.why === "habis" ? "Kode itu sudah berakhir pada " + teksTgl(r.end) + "."
+          : r.why === "format" ? "Format kode salah. Contoh: HE-261117-AB12C" : "Kode tidak dikenali.";
+      }
+      document.getElementById("gate-ok").addEventListener("click", masuk);
+      gin.addEventListener("keydown", function (e) { if (e.key === "Enter") masuk(); });
+      return;
+    }
   }
 
   var SECS = [
@@ -195,13 +274,13 @@ tr.sum2 td.batch { text-transform: none; }
   function defaults() {
     return {
       he: { 15: { p: 180, v: "" }, 16: { p: 180, v: "" }, 17: { p: 210, v: "" }, 18: { p: 210, v: "" } },
-      koli: { 15: "", 16: "", 17: "", 18: "" }
+      koli: { 15: "", 16: "", 17: "", 18: "" },
+      r: "", j: ""
     };
   }
-  function load() {
+  function norm(s, k) {
     var d = defaults();
     try {
-      var s = JSON.parse(localStorage.getItem(KEY));
       if (s && s.he && s.koli) {
         BATCHES.forEach(function (b) {
           if (s.he[b]) {
@@ -210,12 +289,50 @@ tr.sum2 td.batch { text-transform: none; }
           }
           if (s.koli[b] != null) d.koli[b] = String(s.koli[b]).replace(/\D/g, "");
         });
+        d.r = String(s.r || "").replace(/\D/g, "");
+        d.j = String(s.j || "").replace(/[^\d.:]/g, "");
       }
     } catch (e) {}
+    if (!d.r) d.r = DEF_R[k];
     return d;
   }
-  var state = load();
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  var SESI = ["siang", "sore", "malam"];
+  var SESI_NAMA = { siang: "Rett 001", sore: "Rett 002", malam: "Rett 003" };
+  var DEF_R = { siang: "001", sore: "002", malam: "003" };
+  var SKEY = "hitung-he-v2-sesi";
+  function load() {
+    var st = { aktif: "siang", s: {}, tgl: null };
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(SKEY)); } catch (e) {}
+    if (raw && raw.s) {
+      SESI.forEach(function (k) { st.s[k] = norm(raw.s[k], k); });
+      if (SESI.indexOf(raw.aktif) >= 0) st.aktif = raw.aktif;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw.tgl || "")) st.tgl = raw.tgl;
+    } else {
+      var old = null, oldR = null;
+      try { old = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+      try { oldR = JSON.parse(localStorage.getItem(KEY + "-rett")); } catch (e) {}
+      var first = norm(old, "siang");
+      if (oldR) first.j = String(oldR.j || "").replace(/[^\d.:]/g, "");
+      SESI.forEach(function (k) { st.s[k] = k === "siang" ? first : norm(null, k); });
+    }
+    return st;
+  }
+  var store = load();
+  var state = store.s[store.aktif];
+  function hariIni() { var t = witParts(Date.now()); return t.y + "-" + p2(t.m) + "-" + p2(t.d); }
+  function msDariKunci(k) { var a = k.split("-"); return Date.UTC(+a[0], +a[1] - 1, +a[2], 12, 0, 0) - WIT; }
+  function adaData() {
+    return SESI.some(function (x) {
+      var sd = store.s[x];
+      return BATCHES.some(function (b) { return sd.he[b].v !== "" || sd.koli[b] !== ""; }) || sd.r !== DEF_R[x] || sd.j !== "";
+    });
+  }
+  function save() {
+    if (!adaData()) store.tgl = null; else if (!store.tgl) store.tgl = hariIni();
+    try { localStorage.setItem(SKEY, JSON.stringify(store)); } catch (e) {}
+  }
+  function tglData() { return teksTgl(msDariKunci(store.tgl || hariIni())); }
 
   function fmt(n) { return nf.format(n); }
   function split(total, pack, subSize) {
@@ -250,15 +367,40 @@ tr.sum2 td.batch { text-transform: none; }
     return h;
   }
 
-  app.innerHTML = SECS.map(build).join("") + slipHtml();
-  var sisa = Math.floor((BATAS - new Date()) / 86400000);
+  function tabsHtml() {
+    return '<p class="hari" id="hari"></p><div class="tabs" id="tabs" role="group" aria-label="Kedatangan">' + SESI.map(function (k) {
+      return '<button type="button" data-s="' + k + '">' + SESI_NAMA[k] + '<i></i></button>';
+    }).join("") + '</div>';
+  }
+  function gabHtml() {
+    var h = '<section class="card" id="sec-gab"><h2>Gabungan Rett</h2>' +
+      '<div class="scroll"><table><thead><tr><th>Batch ID</th><th>Krjg</th><th>Dus HE</th><th>Jmlh. HE</th></tr></thead><tbody>';
+    BATCHES.forEach(function (b) {
+      h += '<tr><td class="batch">' + b + '</td><td id="gk-' + b + '">-</td><td id="gd-' + b + '">-</td><td id="gj-' + b + '">-</td></tr>';
+    });
+    h += '<tr class="sum"><td class="batch">Total</td><td id="gk-t">-</td><td id="gd-t">-</td><td></td></tr>' +
+      '<tr class="sum2"><td class="batch" colspan="3">Jumlah Koli : <span id="gkoli">-</span></td><td id="gj-t">-</td></tr>' +
+      '</tbody></table></div>' +
+      '<div class="slip-meta" style="margin-top:10px"><span>T.42 : <b id="gt42">-</b></span><span>T.36 : <b id="gt36">-</b></span></div>' +
+      '<div class="gab-sub">Per kedatangan</div>' +
+      '<div class="scroll"><table><thead><tr><th class="l">Kedatangan</th><th>Jam</th><th>Jmlh. HE</th></tr></thead><tbody>';
+    SESI.forEach(function (k) {
+      h += '<tr><td class="batch" id="gr-' + k + '">' + SESI_NAMA[k] + '</td><td id="gm-' + k + '">-</td><td id="gs-' + k + '">-</td></tr>';
+    });
+    h += '</tbody></table></div><div class="actions"><button type="button" class="btn-ghost" data-act="copy">Salin</button>' +
+      '<button type="button" class="btn-ghost" id="gab-reset">Kosongkan semua</button></div></section>';
+    return h;
+  }
+
+  app.innerHTML = tabsHtml() + SECS.map(build).join("") + slipHtml() + gabHtml();
+  var sisa = akses ? Math.ceil((akses.end - Date.now()) / 86400000) : 0;
   app.insertAdjacentHTML("beforeend", '<p class="foot">' + (pemilik ? 'Mode pemilik · tanpa batas waktu' :
-    'Berlaku sampai ' + BATAS_TEKS + ' · ' + (sisa > 0 ? 'sisa ' + sisa + ' hari' : 'berakhir hari ini pukul 23.59')) + '</p>');
+    'Berlaku sampai ' + teksTgl(akses.end) + ' · ' + (sisa > 1 ? 'sisa ' + sisa + ' hari' : 'berakhir hari ini pukul 23.59')) + '</p>');
 
   function slipHtml() {
     var h = '<section class="card" id="sec-slip"><h2>Ringkasan Rett</h2>' +
       '<div class="slip-top">' +
-      '<div><label for="rett">Rett</label><input type="text" id="rett" inputmode="numeric" autocomplete="off" placeholder="003"></div>' +
+      '<div><label for="rett">Rett</label><input type="text" id="rett" inputmode="numeric" autocomplete="off" placeholder="001"></div>' +
       '<div><label for="jam">Jam tiba (WIT)</label><input type="text" id="jam" inputmode="decimal" autocomplete="off" placeholder="19.30"></div>' +
       '</div>' +
       '<div class="slip-meta"><span>T.42 : <b id="t42">-</b></span><span>T.36 : <b id="t36">-</b></span></div>' +
@@ -296,6 +438,74 @@ tr.sum2 td.batch { text-transform: none; }
       kt = parts.join(" + ");
     }
     document.getElementById("skoli").textContent = kt;
+    gab();
+  }
+
+  function sval(sd, id, b) {
+    var raw = id === "he" ? sd.he[b].v : sd.koli[b];
+    return raw === "" ? 0 : parseInt(raw, 10);
+  }
+  function terisi(sd) {
+    return BATCHES.some(function (b) { return sval(sd, "he", b) > 0 || sval(sd, "koli", b) > 0; });
+  }
+  function gabData() {
+    var g = { rows: {}, tk: 0, td: 0, t42: 0, t36: 0, per: {} };
+    BATCHES.forEach(function (b) {
+      var k = 0, d = 0;
+      SESI.forEach(function (x) {
+        var sd = store.s[x], kk = sval(sd, "he", b);
+        k += kk; d += sval(sd, "koli", b);
+        if (kk > 0) {
+          var p = sd.he[b].p, r = split(kk, p, SUB[p]);
+          if (p === 210) g.t42 += r.sub; else g.t36 += r.sub;
+        }
+      });
+      g.rows[b] = { k: k, d: d };
+      g.tk += k; g.td += d;
+    });
+    SESI.forEach(function (x) {
+      var sd = store.s[x], t = 0;
+      BATCHES.forEach(function (b) { t += sval(sd, "he", b) + sval(sd, "koli", b); });
+      g.per[x] = { t: t, r: sd.r, j: sd.j };
+    });
+    g.koli = "-";
+    if (g.td > 0) {
+      var q = split(g.td, 360, 30), parts = [];
+      if (q.full) parts.push(fmt(q.full) + " koli");
+      if (q.sub) parts.push(q.sub + " rak");
+      if (q.ecer) parts.push(q.ecer + " eceran");
+      g.koli = parts.join(" + ");
+    }
+    return g;
+  }
+  function gab() {
+    var g = gabData();
+    function put(id, n) { document.getElementById(id).textContent = n > 0 ? fmt(n) : "-"; }
+    BATCHES.forEach(function (b) {
+      var r = g.rows[b];
+      put("gk-" + b, r.k); put("gd-" + b, r.d); put("gj-" + b, r.k + r.d);
+    });
+    put("gk-t", g.tk); put("gd-t", g.td); put("gj-t", g.tk + g.td);
+    put("gt42", g.t42); put("gt36", g.t36);
+    document.getElementById("gkoli").textContent = g.koli;
+    SESI.forEach(function (x) {
+      var p = g.per[x];
+      document.getElementById("gr-" + x).textContent = "Rett " + (p.r || DEF_R[x]);
+      document.getElementById("gm-" + x).textContent = p.j || "-";
+      put("gs-" + x, p.t);
+    });
+    var hr = document.getElementById("hari"), now = hariIni();
+    hr.textContent = teksTgl(msDariKunci(now));
+    if (store.tgl && store.tgl !== now) {
+      var sm = document.createElement("small");
+      sm.textContent = "Data tanggal " + teksTgl(msDariKunci(store.tgl)) + " · tekan Kosongkan semua untuk hari baru";
+      hr.appendChild(sm);
+    }
+    document.querySelectorAll("#tabs button").forEach(function (btn) {
+      var k = btn.getAttribute("data-s");
+      btn.classList.toggle("on", k === store.aktif);
+      btn.querySelector("i").textContent = terisi(store.s[k]) ? "●" : "";
+    });
   }
 
   function val(sec, b) {
@@ -410,16 +620,75 @@ tr.sum2 td.batch { text-transform: none; }
   });
 
   (function () {
-    var RKEY = KEY + "-rett";
-    var s = {};
-    try { s = JSON.parse(localStorage.getItem(RKEY)) || {}; } catch (e) {}
     var r = document.getElementById("rett"), j = document.getElementById("jam");
-    r.value = String(s.r || "").replace(/\D/g, "");
-    j.value = String(s.j || "").replace(/[^\d.:]/g, "");
-    function sv() { try { localStorage.setItem(RKEY, JSON.stringify({ r: r.value, j: j.value })); } catch (e) {} }
-    r.addEventListener("input", function () { r.value = r.value.replace(/\D/g, ""); sv(); });
-    j.addEventListener("input", function () { j.value = j.value.replace(/[^\d.:]/g, ""); sv(); });
+    r.value = state.r; j.value = state.j;
+    r.addEventListener("input", function () { r.value = r.value.replace(/\D/g, ""); state.r = r.value; save(); gab(); });
+    j.addEventListener("input", function () { j.value = j.value.replace(/[^\d.:]/g, ""); state.j = j.value; save(); gab(); });
+    r.addEventListener("blur", function () {
+      if (r.value === "") { r.value = DEF_R[store.aktif]; state.r = r.value; save(); gab(); }
+    });
   })();
+
+  function tampil() {
+    SECS.forEach(function (sec) {
+      BATCHES.forEach(function (b) {
+        document.getElementById(sec.id + "-" + b).value = sec.id === "he" ? state.he[b].v : state.koli[b];
+      });
+      if (sec.hasPack) {
+        document.querySelectorAll("#sec-" + sec.id + " button.pk").forEach(function (btn) {
+          btn.textContent = state.he[btn.getAttribute("data-b")].p;
+        });
+      }
+      clearOut(sec);
+      if (BATCHES.some(function (b) { return val(sec, b) > 0; })) rinci(sec);
+    });
+    document.getElementById("rett").value = state.r;
+    document.getElementById("jam").value = state.j;
+    slip();
+  }
+  document.querySelectorAll("#tabs button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var k = btn.getAttribute("data-s");
+      if (k === store.aktif) return;
+      store.aktif = k; state = store.s[k]; save(); tampil();
+      try { window.scrollTo(0, 0); } catch (e) {}
+    });
+  });
+
+  var gr = document.getElementById("gab-reset");
+  gr.addEventListener("click", function () {
+    if (gr._arm) {
+      clearTimeout(gr._t); gr._arm = false; gr.textContent = "Kosongkan semua";
+      SESI.forEach(function (k) { store.s[k] = norm(null, k); });
+      state = store.s[store.aktif]; save(); tampil();
+      return;
+    }
+    gr._arm = true; gr.textContent = "Yakin? Ketuk lagi";
+    gr._t = setTimeout(function () { gr._arm = false; gr.textContent = "Kosongkan semua"; }, 3000);
+  });
+
+  document.querySelector('#sec-gab [data-act="copy"]').addEventListener("click", function () {
+    copyText(this, textGab());
+  });
+
+  function textGab() {
+    var g = gabData(), lines = [];
+    BATCHES.forEach(function (b) {
+      var r = g.rows[b];
+      if (r.k + r.d <= 0) return;
+      lines.push("Batch " + b + " : Krjg " + (r.k ? fmt(r.k) : "-") + " | Dus HE " + (r.d ? fmt(r.d) : "-") + " | Jmlh " + fmt(r.k + r.d));
+    });
+    if (!lines.length) return "";
+    var per = [];
+    SESI.forEach(function (x) {
+      var p = g.per[x];
+      if (p.t > 0) per.push("Rett " + (p.r || DEF_R[x]) + (p.j ? " | " + p.j + " WIT" : "") + " : " + fmt(p.t));
+    });
+    return "GABUNGAN RETT | " + tglData() + "\n" + per.join("\n") + "\n" + lines.join("\n") +
+      "\nT.42 : " + (g.t42 ? fmt(g.t42) : "-") + "\nT.36 : " + (g.t36 ? fmt(g.t36) : "-") +
+      "\nTotal : Krjg " + (g.tk ? fmt(g.tk) : "-") + " | Dus HE " + (g.td ? fmt(g.td) : "-") +
+      "\nJumlah Koli : " + g.koli + "\nJmlh. HE : " + fmt(g.tk + g.td);
+  }
 
   document.querySelector('#sec-slip [data-act="copy"]').addEventListener("click", function () {
     copyText(this, textSlip());
@@ -452,7 +721,7 @@ tr.sum2 td.batch { text-transform: none; }
       lines.push("Batch " + b + " : Krjg " + g("sk-" + b) + " | Dus HE " + g("sd-" + b) + " | Jmlh " + g("sj-" + b));
     });
     if (!lines.length) return "";
-    var head = "RINGKASAN RETT" + (rett ? " " + rett : "") + (jam ? " | " + jam + " WIT" : "");
+    var head = "RINGKASAN RETT" + (rett ? " " + rett : "") + (jam ? " | " + jam + " WIT" : "") + "\n" + tglData();
     return head + "\nT.42 : " + g("t42") + "\nT.36 : " + g("t36") + "\n" + lines.join("\n") +
       "\nTotal : Krjg " + g("sk-t") + " | Dus HE " + g("sd-t") +
       "\nJumlah Koli : " + g("skoli") + "\nJmlh. HE : " + g("sj-t");
@@ -490,6 +759,29 @@ tr.sum2 td.batch { text-transform: none; }
       }
     } catch (e) {}
     flash(btn, "Gagal menyalin");
+  }
+
+  if (pemilik) {
+    var gen = document.createElement("section");
+    gen.className = "card";
+    gen.id = "sec-gen";
+    gen.innerHTML = '<h2>Buat kode teman</h2>' +
+      '<div class="gate-row"><input type="text" id="gen-hari" inputmode="numeric" value="7" aria-label="Jumlah hari" style="width:70px">' +
+      '<span>hari</span><button type="button" class="btn-main" id="gen-go" style="height:48px;padding:0 20px;border:0;font-weight:600;font-size:1rem">Buat</button></div>' +
+      '<div class="kode-out" id="gen-out"></div><p class="gate-msg" id="gen-info"></p>' +
+      '<div class="actions" style="justify-content:center"><button type="button" class="btn-ghost" id="gen-copy">Salin pesan</button></div>';
+    app.insertBefore(gen, app.querySelector(".foot"));
+    var lastMsg = "";
+    document.getElementById("gen-go").addEventListener("click", function () {
+      var n = parseInt(document.getElementById("gen-hari").value, 10);
+      if (!(n >= 1 && n <= 90)) n = 7;
+      document.getElementById("gen-hari").value = n;
+      var r = buatKode(n);
+      document.getElementById("gen-out").textContent = r.kode;
+      document.getElementById("gen-info").textContent = "Berlaku sampai " + teksTgl(r.end) + " pukul 23.59 WIT (" + n + " hari termasuk hari ini)";
+      lastMsg = "Kode akses Hitung HE: " + r.kode + "\nBerlaku sampai " + teksTgl(r.end) + " pukul 23.59 WIT.\nBuka: https://chuumyxx.github.io/hitung-he/";
+    });
+    document.getElementById("gen-copy").addEventListener("click", function () { copyText(this, lastMsg); });
   }
 
   slip();
