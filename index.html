@@ -158,6 +158,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
 .tabs button i { font-style: normal; font-size: 0.7rem; margin-left: 4px; opacity: 0.8; }
 #sec-gab td.l, #sec-gab th.l { text-align: left; }
 .gab-sub { margin: 14px 0 6px; padding: 0 4px; font-size: 0.8rem; color: var(--muted); }
+@media (max-width: 460px) { .tabs { gap: 6px; } .tabs button { font-size: 0.85rem; padding: 0 2px; white-space: nowrap; } .tabs button i { margin-left: 2px; } }
 .hari { margin: 0; text-align: center; font-weight: 700; font-size: 1rem; }
 .hari small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.8rem; color: #d9534f; }
 </style>
@@ -320,6 +321,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   }
   var store = load();
   var state = store.s[store.aktif];
+  var lihat = store.aktif;
   function hariIni() { var t = witParts(Date.now()); return t.y + "-" + p2(t.m) + "-" + p2(t.d); }
   function msDariKunci(k) { var a = k.split("-"); return Date.UTC(+a[0], +a[1] - 1, +a[2], 12, 0, 0) - WIT; }
   function adaData() {
@@ -368,8 +370,8 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   }
 
   function tabsHtml() {
-    return '<p class="hari" id="hari"></p><div class="tabs" id="tabs" role="group" aria-label="Kedatangan">' + SESI.map(function (k) {
-      return '<button type="button" data-s="' + k + '">' + SESI_NAMA[k] + '<i></i></button>';
+    return '<p class="hari" id="hari"></p><div class="tabs" id="tabs" role="group" aria-label="Kedatangan">' + SESI.concat("total").map(function (k) {
+      return '<button type="button" data-s="' + k + '">' + (k === "total" ? "Total" : SESI_NAMA[k]) + '<i></i></button>';
     }).join("") + '</div>';
   }
   function gabHtml() {
@@ -503,8 +505,8 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     }
     document.querySelectorAll("#tabs button").forEach(function (btn) {
       var k = btn.getAttribute("data-s");
-      btn.classList.toggle("on", k === store.aktif);
-      btn.querySelector("i").textContent = terisi(store.s[k]) ? "●" : "";
+      btn.classList.toggle("on", k === lihat);
+      btn.querySelector("i").textContent = (k !== "total" && terisi(store.s[k])) ? "●" : "";
     });
   }
 
@@ -649,11 +651,19 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   document.querySelectorAll("#tabs button").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var k = btn.getAttribute("data-s");
-      if (k === store.aktif) return;
-      store.aktif = k; state = store.s[k]; save(); tampil();
+      if (k === lihat) return;
+      lihat = k;
+      if (k !== "total") { store.aktif = k; state = store.s[k]; save(); }
+      aturLihat(); tampil();
       try { window.scrollTo(0, 0); } catch (e) {}
     });
   });
+  function aturLihat() {
+    var tot = lihat === "total";
+    ["sec-he", "sec-koli", "sec-slip"].forEach(function (id) { document.getElementById(id).style.display = tot ? "none" : ""; });
+    document.getElementById("sec-gab").style.display = tot ? "" : "none";
+  }
+  aturLihat();
 
   var gr = document.getElementById("gab-reset");
   gr.addEventListener("click", function () {
