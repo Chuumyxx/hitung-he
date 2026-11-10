@@ -159,6 +159,16 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
 #sec-gab td.l, #sec-gab th.l { text-align: left; }
 .gab-sub { margin: 14px 0 6px; padding: 0 4px; font-size: 0.8rem; color: var(--muted); }
 @media (max-width: 460px) { .tabs { gap: 6px; } .tabs button { font-size: 0.85rem; padding: 0 2px; white-space: nowrap; } .tabs button i { margin-left: 2px; } }
+button.mini { height: 22px; margin-left: 6px; padding: 0 8px; font-size: 0.7rem; font-weight: 600; color: var(--fg); background: var(--ghost); border: 0; vertical-align: middle; }
+button:disabled { opacity: 0.4; cursor: default; }
+.st { margin-left: 8px; padding: 2px 8px; border-radius: 99px; font: 600 0.7rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; vertical-align: middle; color: var(--muted); background: var(--ghost); }
+.st.ok { color: var(--accent-fg); background: var(--accent); }
+.ov { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.6); }
+.dlg { width: 100%; max-width: 340px; padding: 20px 16px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; }
+.dlg p { margin: 0 0 4px; text-align: center; font-size: 1.05rem; font-weight: 600; }
+.dlg .actions { justify-content: center; }
+.btn-danger { background: #c0392b; color: #fff; }
+.actions button.btn-del { width: 100%; color: #d9534f; background: transparent; border: 1.5px solid #d9534f; }
 .hari { margin: 0; text-align: center; font-weight: 700; font-size: 1rem; }
 .hari small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.8rem; color: #d9534f; }
 </style>
@@ -276,7 +286,8 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     return {
       he: { 15: { p: 180, v: "" }, 16: { p: 180, v: "" }, 17: { p: 210, v: "" }, 18: { p: 210, v: "" } },
       koli: { 15: "", 16: "", 17: "", 18: "" },
-      r: "", j: ""
+      r: "", j: "",
+      sv: { he: false, koli: false }
     };
   }
   function norm(s, k) {
@@ -292,6 +303,11 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
         });
         d.r = String(s.r || "").replace(/\D/g, "");
         d.j = String(s.j || "").replace(/[^\d.:]/g, "");
+        if (s.sv) { d.sv.he = !!s.sv.he; d.sv.koli = !!s.sv.koli; }
+        else {
+          d.sv.he = BATCHES.some(function (b) { return d.he[b].v !== ""; });
+          d.sv.koli = BATCHES.some(function (b) { return d.koli[b] !== ""; });
+        }
       }
     } catch (e) {}
     if (!d.r) d.r = DEF_R[k];
@@ -322,6 +338,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   var store = load();
   var state = store.s[store.aktif];
   var lihat = store.aktif;
+  var infoHapus = "";
   function hariIni() { var t = witParts(Date.now()); return t.y + "-" + p2(t.m) + "-" + p2(t.d); }
   function msDariKunci(k) { var a = k.split("-"); return Date.UTC(+a[0], +a[1] - 1, +a[2], 12, 0, 0) - WIT; }
   function adaData() {
@@ -333,6 +350,10 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   function save() {
     if (!adaData()) store.tgl = null; else if (!store.tgl) store.tgl = hariIni();
     try { localStorage.setItem(SKEY, JSON.stringify(store)); } catch (e) {}
+  }
+  function jamSekarang() {
+    var d = new Date(Date.now() + WIT);
+    return p2(d.getUTCHours()) + "." + p2(d.getUTCMinutes());
   }
   function tglData() { return teksTgl(msDariKunci(store.tgl || hariIni())); }
 
@@ -347,7 +368,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   var app = document.getElementById("app");
 
   function build(sec) {
-    var h = '<section class="card" id="sec-' + sec.id + '"><h2>' + sec.title + '</h2>' +
+    var h = '<section class="card" id="sec-' + sec.id + '"><h2>' + sec.title + '<span class="st"></span></h2>' +
       '<div class="scroll"><table><thead><tr>' +
       sec.head.map(function (t) { return "<th>" + t + "</th>"; }).join("") +
       "</tr></thead><tbody>";
@@ -363,9 +384,9 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     h += '<tr class="sum"><td class="batch" colspan="' + (sec.hasPack ? 2 : 1) + '">Total</td>' +
       '<td class="s-butir">-</td><td class="s-full">-</td><td class="s-sub">-</td><td class="s-ecer">-</td><td class="s-tot">-</td></tr>';
     h += '</tbody></table></div><div class="actions">' +
-      '<button type="button" class="btn-main" data-act="rinci">Rinci</button>' +
-      '<button type="button" class="btn-ghost" data-act="clear">Kosongkan</button>' +
-      '<button type="button" class="btn-ghost" data-act="copy">Salin</button></div></section>';
+      '<button type="button" class="btn-main" data-act="simpan">Simpan</button>' +
+      '<button type="button" class="btn-ghost" data-act="edit">Edit</button>' +
+      '<button type="button" class="btn-ghost" data-act="clear">Kosongkan</button></div></section>';
     return h;
   }
 
@@ -389,8 +410,8 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     SESI.forEach(function (k) {
       h += '<tr><td class="batch" id="gr-' + k + '">' + SESI_NAMA[k] + '</td><td id="gm-' + k + '">-</td><td id="gs-' + k + '">-</td></tr>';
     });
-    h += '</tbody></table></div><div class="actions"><button type="button" class="btn-ghost" data-act="copy">Salin</button>' +
-      '<button type="button" class="btn-ghost" id="gab-reset">Kosongkan semua</button></div></section>';
+    h += '</tbody></table></div><div class="actions"><button type="button" class="btn-ghost" data-act="copy">Salin</button></div>' +
+      '<div class="actions" style="margin-top:22px"><button type="button" class="btn-del" id="gab-reset">Hapus semua</button></div></section>';
     return h;
   }
 
@@ -403,7 +424,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     var h = '<section class="card" id="sec-slip"><h2>Ringkasan Rett</h2>' +
       '<div class="slip-top">' +
       '<div><label for="rett">Rett</label><input type="text" id="rett" inputmode="numeric" autocomplete="off" placeholder="001"></div>' +
-      '<div><label for="jam">Jam tiba (WIT)</label><input type="text" id="jam" inputmode="decimal" autocomplete="off" placeholder="19.30"></div>' +
+      '<div><label for="jam">Jam tiba (WIT)<button type="button" class="mini" id="jam-now">Sekarang</button></label><input type="text" id="jam" inputmode="decimal" autocomplete="off" placeholder="19.30"></div>' +
       '</div>' +
       '<div class="slip-meta"><span>T.42 : <b id="t42">-</b></span><span>T.36 : <b id="t36">-</b></span></div>' +
       '<div class="scroll"><table><thead><tr><th>Batch ID</th><th>Krjg</th><th>Dus HE</th><th>Jmlh. HE</th></tr></thead><tbody>';
@@ -420,7 +441,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     var tk = 0, td = 0, t42 = 0, t36 = 0;
     function put(id, n) { document.getElementById(id).textContent = n > 0 ? fmt(n) : "-"; }
     BATCHES.forEach(function (b) {
-      var k = val(SECS[0], b), d = val(SECS[1], b);
+      var k = cnt(SECS[0], b), d = cnt(SECS[1], b);
       put("sk-" + b, k); put("sd-" + b, d); put("sj-" + b, k + d);
       tk += k; td += d;
       if (k > 0) {
@@ -444,6 +465,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   }
 
   function sval(sd, id, b) {
+    if (!sd.sv[id]) return 0;
     var raw = id === "he" ? sd.he[b].v : sd.koli[b];
     return raw === "" ? 0 : parseInt(raw, 10);
   }
@@ -498,9 +520,10 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     });
     var hr = document.getElementById("hari"), now = hariIni();
     hr.textContent = teksTgl(msDariKunci(now));
-    if (store.tgl && store.tgl !== now) {
+    if (store.tgl) infoHapus = "";
+    if (infoHapus) {
       var sm = document.createElement("small");
-      sm.textContent = "Data tanggal " + teksTgl(msDariKunci(store.tgl)) + " · tekan Kosongkan semua untuk hari baru";
+      sm.textContent = infoHapus;
       hr.appendChild(sm);
     }
     document.querySelectorAll("#tabs button").forEach(function (btn) {
@@ -510,6 +533,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
     });
   }
 
+  function cnt(sec, b) { return state.sv[sec.id] ? val(sec, b) : 0; }
   function val(sec, b) {
     var raw = sec.id === "he" ? state.he[b].v : state.koli[b];
     return raw === "" ? 0 : parseInt(raw, 10);
@@ -564,6 +588,8 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
         var clean = inp.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
         if (clean !== inp.value) inp.value = clean;
         if (sec.id === "he") state.he[b].v = clean; else state.koli[b] = clean;
+        if (state.sv[sec.id]) return;
+        if (clean !== "" && !state.j) { state.j = jamSekarang(); document.getElementById("jam").value = state.j; }
         save();
         clearOut(sec);
         slip();
@@ -572,7 +598,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
       inp.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
           e.preventDefault();
-          if (i === inputs.length - 1) { rinci(sec); inp.blur(); } else inputs[i + 1].focus();
+          if (i === inputs.length - 1) { simpan(sec, root.querySelector('[data-act="simpan"]')); inp.blur(); } else inputs[i + 1].focus();
         } else if (e.key === "ArrowDown") {
           e.preventDefault();
           if (i < inputs.length - 1) inputs[i + 1].focus();
@@ -602,30 +628,65 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
       });
     }
 
-    root.querySelector('[data-act="rinci"]').addEventListener("click", function () { rinci(sec); });
-    root.querySelector('[data-act="clear"]').addEventListener("click", function () {
-      BATCHES.forEach(function (b, i) {
-        if (sec.id === "he") state.he[b].v = ""; else state.koli[b] = "";
-        inputs[i].value = "";
-      });
-      save();
-      clearOut(sec);
-      slip();
+    root.querySelector('[data-act="simpan"]').addEventListener("click", function () { simpan(sec, this); });
+    root.querySelector('[data-act="edit"]').addEventListener("click", function () {
+      state.sv[sec.id] = false; save(); clearOut(sec); kunci(sec); slip();
       inputs[0].focus();
     });
-
-    root.querySelector('[data-act="copy"]').addEventListener("click", function () {
-      copyText(this, textSec(sec));
+    root.querySelector('[data-act="clear"]').addEventListener("click", function () {
+      konfirmasi("Yakin menghapus data " + sec.title + " " + SESI_NAMA[store.aktif] + "?", "Hapus", function () {
+        BATCHES.forEach(function (b, i) {
+          if (sec.id === "he") state.he[b].v = ""; else state.koli[b] = "";
+          inputs[i].value = "";
+        });
+        state.sv[sec.id] = false;
+        save(); clearOut(sec); kunci(sec); slip();
+      });
     });
 
-    if (BATCHES.some(function (b) { return val(sec, b) > 0; })) rinci(sec);
+    if (state.sv[sec.id]) rinci(sec);
+    kunci(sec);
   });
+
+  function kunci(sec) {
+    var root = document.getElementById("sec-" + sec.id), on = !!state.sv[sec.id];
+    BATCHES.forEach(function (b) { document.getElementById(sec.id + "-" + b).disabled = on; });
+    root.querySelectorAll("button.pk").forEach(function (btn) { btn.disabled = on; });
+    root.querySelector('[data-act="simpan"]').disabled = on;
+    root.querySelector('[data-act="edit"]').disabled = !on;
+    var st = root.querySelector(".st");
+    st.textContent = on ? "Tersimpan" : "Belum disimpan";
+    st.className = "st" + (on ? " ok" : "");
+  }
+  function simpan(sec, btn) {
+    if (!BATCHES.some(function (b) { return val(sec, b) > 0; })) { flash(btn, "Isi dulu"); return; }
+    state.sv[sec.id] = true; save(); rinci(sec); kunci(sec); slip();
+  }
+  function konfirmasi(pesan, label, aksi) {
+    var ov = document.createElement("div");
+    ov.className = "ov";
+    ov.innerHTML = '<div class="dlg" role="dialog" aria-modal="true"><p></p><div class="actions">' +
+      '<button type="button" class="btn-ghost" data-x="n">Batal</button>' +
+      '<button type="button" class="btn-danger" data-x="y"></button></div></div>';
+    ov.querySelector("p").textContent = pesan;
+    ov.querySelector('[data-x="y"]').textContent = label;
+    function tutup() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.addEventListener("click", function (e) {
+      var x = e.target.getAttribute && e.target.getAttribute("data-x");
+      if (x === "y") { tutup(); aksi(); } else if (x === "n" || e.target === ov) tutup();
+    });
+    document.body.appendChild(ov);
+    ov.querySelector('[data-x="n"]').focus();
+  }
 
   (function () {
     var r = document.getElementById("rett"), j = document.getElementById("jam");
     r.value = state.r; j.value = state.j;
     r.addEventListener("input", function () { r.value = r.value.replace(/\D/g, ""); state.r = r.value; save(); gab(); });
     j.addEventListener("input", function () { j.value = j.value.replace(/[^\d.:]/g, ""); state.j = j.value; save(); gab(); });
+    document.getElementById("jam-now").addEventListener("click", function () {
+      state.j = jamSekarang(); j.value = state.j; save(); gab();
+    });
     r.addEventListener("blur", function () {
       if (r.value === "") { r.value = DEF_R[store.aktif]; state.r = r.value; save(); gab(); }
     });
@@ -642,7 +703,8 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
         });
       }
       clearOut(sec);
-      if (BATCHES.some(function (b) { return val(sec, b) > 0; })) rinci(sec);
+      if (state.sv[sec.id]) rinci(sec);
+      kunci(sec);
     });
     document.getElementById("rett").value = state.r;
     document.getElementById("jam").value = state.j;
@@ -665,17 +727,23 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   }
   aturLihat();
 
-  var gr = document.getElementById("gab-reset");
-  gr.addEventListener("click", function () {
-    if (gr._arm) {
-      clearTimeout(gr._t); gr._arm = false; gr.textContent = "Kosongkan semua";
-      SESI.forEach(function (k) { store.s[k] = norm(null, k); });
-      state = store.s[store.aktif]; save(); tampil();
-      return;
-    }
-    gr._arm = true; gr.textContent = "Yakin? Ketuk lagi";
-    gr._t = setTimeout(function () { gr._arm = false; gr.textContent = "Kosongkan semua"; }, 3000);
+  function hapusSemua() {
+    SESI.forEach(function (k) { store.s[k] = norm(null, k); });
+    state = store.s[store.aktif]; save(); tampil();
+  }
+  document.getElementById("gab-reset").addEventListener("click", function () {
+    konfirmasi("Yakin menghapus semua data Rett 001, 002, dan 003?", "Hapus semua", hapusSemua);
   });
+  // Ganti tanggal (WIT): data hari sebelumnya terhapus otomatis.
+  function cekTanggal() {
+    if (store.tgl && store.tgl !== hariIni()) {
+      infoHapus = "Data tanggal sebelumnya dihapus otomatis";
+      hapusSemua();
+    }
+  }
+  document.addEventListener("visibilitychange", cekTanggal);
+  window.addEventListener("focus", cekTanggal);
+  setInterval(cekTanggal, 60000);
 
   document.querySelector('#sec-gab [data-act="copy"]').addEventListener("click", function () {
     copyText(this, textGab());
@@ -795,6 +863,7 @@ input[type="text"].wide { width: 100%; max-width: 280px; text-transform: upperca
   }
 
   slip();
+  cekTanggal();
 })();
 </script>
 <script>
