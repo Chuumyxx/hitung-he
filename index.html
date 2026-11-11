@@ -169,6 +169,8 @@ button:disabled { opacity: 0.4; cursor: default; }
 .dlg .actions { justify-content: center; }
 .btn-danger { background: #c0392b; color: #fff; }
 .actions button.btn-del { width: 100%; color: #d9534f; background: transparent; border: 1.5px solid #d9534f; }
+td.out { position: relative; }
+td.out[data-sub]::after { content: "(" attr(data-sub) ")"; position: absolute; left: 0; right: 0; bottom: 5px; text-align: center; font-size: 0.62rem; font-weight: 500; line-height: 1; color: var(--muted); pointer-events: none; }
 .hari { margin: 0; text-align: center; font-weight: 700; font-size: 1rem; }
 .hari small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.8rem; color: #d9534f; }
 </style>
@@ -539,9 +541,10 @@ button:disabled { opacity: 0.4; cursor: default; }
     return raw === "" ? 0 : parseInt(raw, 10);
   }
 
-  function setCell(el, text, has) {
+  function setCell(el, text, has, sub) {
     el.textContent = text;
     el.classList.toggle("has", !!has);
+    if (sub) el.setAttribute("data-sub", sub); else el.removeAttribute("data-sub");
   }
 
   function clearOut(sec) {
@@ -564,8 +567,8 @@ button:disabled { opacity: 0.4; cursor: default; }
       var pack = sec.hasPack ? state.he[b].p : sec.pack;
       var subSize = sec.hasPack ? SUB[pack] : sec.subSize;
       var r = split(v, pack, subSize);
-      setCell(cells[0], r.full ? fmt(r.full) : "-", r.full);
-      setCell(cells[1], r.sub ? fmt(r.sub) : "-", r.sub);
+      setCell(cells[0], r.full ? fmt(r.full) : "-", r.full, r.full ? fmt(r.full * pack) : "");
+      setCell(cells[1], r.sub ? fmt(r.sub) : "-", r.sub, r.sub ? fmt(r.sub * subSize) : "");
       setCell(cells[2], r.ecer ? fmt(r.ecer) : "-", r.ecer);
       setCell(cells[3], fmt(r.full * pack + r.sub * subSize + r.ecer), true);
       sums.butir += v; sums.full += r.full; sums.sub += r.sub; sums.ecer += r.ecer;
