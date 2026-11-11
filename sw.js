@@ -1,4 +1,4 @@
-var CACHE = "hitung-he-v11";
+var CACHE = "hitung-he-v12";
 var FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", function (e) {

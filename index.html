@@ -724,6 +724,8 @@ button:disabled { opacity: 0.4; cursor: default; }
     var tot = lihat === "total";
     ["sec-he", "sec-koli", "sec-slip"].forEach(function (id) { document.getElementById(id).style.display = tot ? "none" : ""; });
     document.getElementById("sec-gab").style.display = tot ? "" : "none";
+    var gn = document.getElementById("sec-gen");
+    if (gn) gn.style.display = tot ? "" : "none";
   }
   aturLihat();
 
@@ -851,6 +853,7 @@ button:disabled { opacity: 0.4; cursor: default; }
       '<div class="actions" style="justify-content:center"><button type="button" class="btn-ghost" id="gen-copy">Salin kode</button>' +
       '<button type="button" class="btn-main" id="gen-send">Kirim WA</button></div>';
     app.insertBefore(gen, app.querySelector(".foot"));
+    aturLihat();
     var lastMsg = "", lastEnd = 0;
     document.getElementById("gen-go").addEventListener("click", function () {
       var n = parseInt(document.getElementById("gen-hari").value, 10);
@@ -866,7 +869,7 @@ button:disabled { opacity: 0.4; cursor: default; }
       var no = document.getElementById("gen-wa").value.replace(/\D/g, "");
       if (no.indexOf("0") === 0) no = "62" + no.slice(1);
       else if (no.indexOf("8") === 0) no = "62" + no;
-      var teks = "Kode akses Hitung HE: " + lastMsg + "\nBerlaku sampai " + teksTgl(lastEnd) + " pukul 23.59 WIT.\nBuka: https://chuumyxx.github.io/hitung-he/";
+      var teks = lastMsg;
       var a = document.createElement("a");
       a.href = "https://wa.me/" + no + "?text=" + encodeURIComponent(teks);
       a.target = "_blank"; a.rel = "noopener";
