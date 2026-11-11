@@ -847,9 +847,11 @@ button:disabled { opacity: 0.4; cursor: default; }
       '<div class="gate-row"><input type="text" id="gen-hari" inputmode="numeric" value="7" aria-label="Jumlah hari" style="width:70px">' +
       '<span>hari</span><button type="button" class="btn-main" id="gen-go" style="height:48px;padding:0 20px;border:0;font-weight:600;font-size:1rem">Buat</button></div>' +
       '<div class="kode-out" id="gen-out"></div><p class="gate-msg" id="gen-info"></p>' +
-      '<div class="actions" style="justify-content:center"><button type="button" class="btn-ghost" id="gen-copy">Salin pesan</button></div>';
+      '<div class="gate-row"><input type="text" class="wide" id="gen-wa" inputmode="tel" placeholder="No. WA teman (boleh kosong)" autocomplete="off" aria-label="Nomor WA teman" style="text-transform:none;letter-spacing:0"></div>' +
+      '<div class="actions" style="justify-content:center"><button type="button" class="btn-ghost" id="gen-copy">Salin kode</button>' +
+      '<button type="button" class="btn-main" id="gen-send">Kirim WA</button></div>';
     app.insertBefore(gen, app.querySelector(".foot"));
-    var lastMsg = "";
+    var lastMsg = "", lastEnd = 0;
     document.getElementById("gen-go").addEventListener("click", function () {
       var n = parseInt(document.getElementById("gen-hari").value, 10);
       if (!(n >= 1 && n <= 90)) n = 7;
@@ -857,7 +859,18 @@ button:disabled { opacity: 0.4; cursor: default; }
       var r = buatKode(n);
       document.getElementById("gen-out").textContent = r.kode;
       document.getElementById("gen-info").textContent = "Berlaku sampai " + teksTgl(r.end) + " pukul 23.59 WIT (" + n + " hari termasuk hari ini)";
-      lastMsg = "Kode akses Hitung HE: " + r.kode + "\nBerlaku sampai " + teksTgl(r.end) + " pukul 23.59 WIT.\nBuka: https://chuumyxx.github.io/hitung-he/";
+      lastMsg = r.kode; lastEnd = r.end;
+    });
+    document.getElementById("gen-send").addEventListener("click", function () {
+      if (!lastMsg) document.getElementById("gen-go").click();
+      var no = document.getElementById("gen-wa").value.replace(/\D/g, "");
+      if (no.indexOf("0") === 0) no = "62" + no.slice(1);
+      else if (no.indexOf("8") === 0) no = "62" + no;
+      var teks = "Kode akses Hitung HE: " + lastMsg + "\nBerlaku sampai " + teksTgl(lastEnd) + " pukul 23.59 WIT.\nBuka: https://chuumyxx.github.io/hitung-he/";
+      var a = document.createElement("a");
+      a.href = "https://wa.me/" + no + "?text=" + encodeURIComponent(teks);
+      a.target = "_blank"; a.rel = "noopener";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
     });
     document.getElementById("gen-copy").addEventListener("click", function () { copyText(this, lastMsg); });
   }
