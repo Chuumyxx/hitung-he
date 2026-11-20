@@ -1,896 +1,490 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#245b3f">
+<title>Hitung Solar</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>Hitung HE</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0b6bcb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hitung Solar">
 <style>
-:root {
-  --bg: #e9efe9;
-  --card: #ffffff;
-  --fg: #17231c;
-  --muted: #5d6e63;
-  --line: #dbe3dc;
-  --head: #eff4ef;
-  --accent: #245b3f;
-  --accent-fg: #ffffff;
-  --soft: #e1efe6;
-  --ghost: #ececec;
-  --field: #ffffff;
-  --field-line: #6b6b6b;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1712;
-    --card: #17221b;
-    --fg: #e6efe8;
-    --muted: #98aa9e;
-    --line: #2b3a30;
-    --head: #1d2b22;
-    --accent: #4caf7d;
-    --accent-fg: #06180f;
-    --soft: #1f3326;
-    --ghost: #24332a;
-    --field: #101912;
-    --field-line: #8a9c8f;
-  }
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 15px;
-  line-height: 1.45;
-  padding: 16px 12px 40px;
-}
-.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px 12px;
-}
-h2 {
-  margin: 0 0 12px;
-  padding: 0 4px;
-  font-family: "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
-  font-stretch: condensed;
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-.desc { margin: 0 0 8px; padding: 0 4px; color: var(--muted); }
-.desc b { color: var(--fg); }
-.note { margin: 0 0 12px; padding: 0 4px; color: var(--muted); font-size: 0.85rem; }
-.note b { color: var(--fg); }
-
-.scroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-th {
-  background: var(--head);
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 8px 3px;
-  text-align: center;
-  line-height: 1.15;
-}
-td {
-  padding: 8px 3px;
-  border-bottom: 1px solid var(--line);
-  text-align: center;
-  font-size: 0.9rem;
-  font-variant-numeric: tabular-nums;
-}
-td.batch { text-align: left; font-weight: 600; white-space: nowrap; padding-left: 6px; }
-td.out { color: var(--muted); }
-td.out.has { color: var(--fg); }
-td.tot.has { font-weight: 700; }
-tr.sum td { background: var(--soft); font-weight: 700; border-bottom: 0; border-top: 2px solid var(--line); }
-tr.sum td.batch { text-transform: uppercase; }
-
-input[type="text"] {
-  width: 76px;
-  height: 44px;
-  padding: 0 6px;
-  font: 600 16px system-ui, sans-serif;
-  text-align: center;
-  color: var(--fg);
-  background: var(--field);
-  border: 1.5px solid var(--field-line);
-  border-radius: 6px;
-}
-input[type="text"]:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-button { font: inherit; cursor: pointer; border-radius: 8px; }
-button.pk {
-  width: 48px;
-  height: 44px;
-  font-weight: 700;
-  color: var(--fg);
-  background: var(--field);
-  border: 1.5px solid var(--line);
-}
-button.pk:active { background: var(--soft); }
-
-.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; padding: 0 4px; }
-.actions button { height: 48px; padding: 0 20px; font-weight: 600; font-size: 1rem; border: 0; }
-.btn-main { background: var(--accent); color: var(--accent-fg); }
-.btn-main:active { filter: brightness(0.9); }
-.btn-ghost { background: var(--ghost); color: var(--fg); }
-
-.slip-top { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 4px 12px; }
-.slip-top label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
-.slip-top input[type="text"] { width: 100%; }
-.slip-meta { display: flex; gap: 20px; margin: 0 4px 10px; color: var(--muted); font-size: 0.9rem; }
-.slip-meta b { color: var(--fg); font-variant-numeric: tabular-nums; }
-#sec-slip td { font-weight: 500; }
-tr.sum2 td { background: var(--soft); font-weight: 700; border-bottom: 0; }
-tr.sum2 td.batch { text-transform: none; }
-#sj-t { font-size: 1.1rem; }
-.foot { margin: 0; text-align: center; color: var(--muted); font-size: 0.8rem; }
-
-@media (max-width: 460px) {
-  body { padding: 12px 8px 40px; }
-  .card { padding: 14px 8px; }
-  th { font-size: 0.62rem; padding: 6px 1px; }
-  td { padding: 6px 1px; font-size: 0.82rem; }
-  td.batch { padding-left: 4px; font-size: 0.82rem; }
-  input[type="text"] { width: 62px; padding: 0 3px; }
-  button.pk { width: 40px; }
-}
-input[type="text"].wide { width: 100%; max-width: 280px; text-transform: uppercase; letter-spacing: 0.05em; }
-.gate-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center; margin-top: 12px; }
-.gate-msg { margin: 10px 4px 0; text-align: center; font-size: 0.9rem; color: var(--muted); }
-.gate-msg.err { color: #b3261e; }
-.kode-out { margin: 12px 4px 0; text-align: center; font-size: 1.3rem; font-weight: 700; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
-.tabs { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; padding: 8px 0; background: var(--bg); }
-.tabs button { flex: 1; height: 46px; font-weight: 700; font-size: 1rem; color: var(--fg); background: var(--ghost); border: 1.5px solid transparent; }
-.tabs button.on { background: var(--accent); color: var(--accent-fg); }
-.tabs button i { font-style: normal; font-size: 0.7rem; margin-left: 4px; opacity: 0.8; }
-#sec-gab td.l, #sec-gab th.l { text-align: left; }
-.gab-sub { margin: 14px 0 6px; padding: 0 4px; font-size: 0.8rem; color: var(--muted); }
-@media (max-width: 460px) { .tabs { gap: 6px; } .tabs button { font-size: 0.85rem; padding: 0 2px; white-space: nowrap; } .tabs button i { margin-left: 2px; } }
-button.mini { height: 22px; margin-left: 6px; padding: 0 8px; font-size: 0.7rem; font-weight: 600; color: var(--fg); background: var(--ghost); border: 0; vertical-align: middle; }
-button:disabled { opacity: 0.4; cursor: default; }
-.st { margin-left: 8px; padding: 2px 8px; border-radius: 99px; font: 600 0.7rem system-ui, sans-serif; letter-spacing: 0; text-transform: none; vertical-align: middle; color: var(--muted); background: var(--ghost); }
-.st.ok { color: var(--accent-fg); background: var(--accent); }
-.ov { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.6); }
-.dlg { width: 100%; max-width: 340px; padding: 20px 16px; background: var(--card); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; }
-.dlg p { margin: 0 0 4px; text-align: center; font-size: 1.05rem; font-weight: 600; }
-.dlg .actions { justify-content: center; }
-.btn-danger { background: #c0392b; color: #fff; }
-.actions button.btn-del { width: 100%; color: #d9534f; background: transparent; border: 1.5px solid #d9534f; }
-td.out { position: relative; }
-td.out[data-sub]::after { content: "(" attr(data-sub) ")"; position: absolute; left: 0; right: 0; bottom: 5px; text-align: center; font-size: 0.62rem; font-weight: 500; line-height: 1; color: var(--muted); pointer-events: none; }
-.hari { margin: 0; text-align: center; font-weight: 700; font-size: 1rem; }
-.hari small { display: block; margin-top: 2px; font-weight: 500; font-size: 0.8rem; color: #d9534f; }
+:root{color-scheme:light dark;--bg:#f4f6f8;--card:#ffffff;--txt:#1d2430;--mut:#667085;--acc:#0b6bcb;--line:#d0d7e0;--err:#c62828}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--card:#1c2026;--txt:#e8ecf1;--mut:#9aa4b2;--acc:#4da3ff;--line:#2e3540;--err:#ff6b6b}}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);padding:12px}
+main{max-width:420px;margin:0 auto}
+h1{font-size:20px;margin:4px 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 2px}
+.sub{font-size:12px;color:var(--mut);margin-bottom:10px}
+.row{display:flex;gap:8px}
+input,select{font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--txt);min-width:0}
+input{flex:1;width:100%}
+select{width:84px}
+.hasil{margin-top:10px;font-size:24px;font-weight:700;color:var(--acc)}
+.hasil small{font-size:13px;font-weight:400;color:var(--mut)}
+.err{color:var(--err);font-size:13px;min-height:1em;margin-top:6px}
+.rumus{font-size:12px;color:var(--mut);line-height:1.6}
+.btn{font:inherit;font-size:14px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--txt);width:100%;margin-top:4px}
+.wa-field{margin-top:8px}
+.wa-field label{display:block;font-size:12px;color:var(--mut);margin-bottom:4px}
+.wa-field input{width:100%}
+.wa-pratinjau{white-space:pre-wrap;font-size:13px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:10px}
+.wa-tombol{display:flex;gap:8px;margin-top:10px}
+.wa-tombol .btn{margin-top:0;flex:1}
+.btn-utama{background:var(--acc);border-color:var(--acc);color:#fff}
+.tanggal{font-size:14px;color:var(--mut);margin:0 0 12px}
+input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
+input[type=date]{min-height:44px;color-scheme:inherit}
+.card{padding:12px 14px;margin-bottom:10px}
+.card h2{font-size:15px}
+.sub{margin-bottom:8px}
+.baris{display:flex;align-items:center;gap:10px}
+.baris input{flex:1 1 0;min-width:0;min-height:44px}
+.baris .hasil{margin:0;font-size:20px;white-space:nowrap;text-align:right;min-width:110px}
+.hasil small{font-size:12px}
+.err:empty{display:none}
+.err{min-height:0;margin-top:6px;font-size:12px}
+.card > .hasil{margin-top:8px}
+.wa-field{margin-top:8px}
+.wa-field label{margin-bottom:2px}
+.wa-field input{min-height:40px}
+.wa-pratinjau{font-size:13px;padding:8px 10px;margin-top:8px}
+.wa-tombol{margin-top:8px}
+.btn{min-height:42px}
+.salah{border-color:var(--err)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--err) 25%,transparent)!important}
+.btn-utama{min-height:42px}
+.rumus{font-size:11px}
+h1{margin:2px 0 2px}
+.tanggal{margin:0 0 8px}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"></div>
+<main>
+<h1>Hitung Solar</h1>
+<div class="tanggal" id="tanggal-hari"></div>
+
+<section class="card">
+  <h2>Tangki 01</h2>
+  <div class="sub">Rebah · Maks 210 cm</div>
+  <div class="baris">
+    <input id="t1" type="text" inputmode="decimal" placeholder="Tinggi (cm)" autocomplete="off">
+    <div class="hasil" id="r1">— <small>liter</small></div>
+  </div>
+  <div class="err" id="e1"></div>
+</section>
+
+<section class="card">
+  <h2>Tangki 02</h2>
+  <div class="sub">Rebah · Maks 210 cm</div>
+  <div class="baris">
+    <input id="t2" type="text" inputmode="decimal" placeholder="Tinggi (cm)" autocomplete="off">
+    <div class="hasil" id="r2">— <small>liter</small></div>
+  </div>
+  <div class="err" id="e2"></div>
+</section>
+
+<section class="card">
+  <h2>Tangki Genset (DLAM)</h2>
+  <div class="sub">Kotak 120 × 118 cm · Maks 95 cm</div>
+  <div class="baris">
+    <input id="td" type="text" inputmode="decimal" placeholder="Tinggi (cm)" autocomplete="off">
+    <div class="hasil" id="rd">— <small>liter</small></div>
+  </div>
+  <div class="err" id="ed"></div>
+</section>
+
+<section class="card">
+  <h2>Total 3 Tangki</h2>
+  <div class="hasil" id="rt">— <small>liter</small></div>
+  <button class="btn" id="reset" type="button">Kosongkan isian</button>
+</section>
+
+<section class="card">
+  <h2>Stok Berjalan</h2>
+  <div class="sub" id="sb-info"></div>
+  <div class="sub" id="sb-pakai"></div>
+  <button class="btn btn-utama" id="sb-simpan" type="button">Simpan sebagai stok berjalan</button>
+  <div class="err" id="sb-err"></div>
+</section>
+
+<section class="card">
+  <h2>Laporan WA Solar</h2>
+  <div class="wa-field"><label for="wa-tgl">Tanggal akhir</label><input id="wa-tgl" type="date"></div>
+  <div class="wa-field"><label for="wa-awal">Stok akhir bulan lalu (liter)</label><input id="wa-awal" type="text" inputmode="numeric" placeholder="contoh: 24315" autocomplete="off"></div>
+  <div class="wa-field"><label for="wa-jam">Pemakaian per jam (liter)</label><input id="wa-jam" type="text" inputmode="numeric" placeholder="80" autocomplete="off"></div>
+  <div class="wa-field"><label for="wa-nomor">Nomor WA tujuan (opsional, contoh 08xxxxxxxxxx)</label><input id="wa-nomor" type="tel" inputmode="tel" placeholder="kosongkan untuk pilih kontak" autocomplete="off"></div>
+  <div class="wa-pratinjau" id="wa-pratinjau"></div>
+  <div class="err" id="wa-err"></div>
+  <div class="wa-tombol">
+    <button class="btn" id="wa-kirim-teks" type="button">Kirim WA (teks)</button>
+    <button class="btn btn-utama" id="wa-kirim-gambar" type="button">Kirim WA Gambar</button>
+  </div>
+</section>
+
+<section class="card rumus">
+  <b>Rumus</b><br>
+  Tangki rebah: luas isi = luas juring − luas segitiga, π = 3,14 (sama dengan Excel). Volume = luas × 4,78 m.<br>
+  Tangki genset: volume = 120 × 118 × tinggi (cm) ÷ 1000.<br>
+  Tiap tangki dibulatkan ke liter bulat, lalu dijumlahkan.
+</section>
+</main>
 
 <script>
 (function () {
-  var KEY = "hitung-he-v1";
-  var BATCHES = [15, 16, 17, 18];
-  var nf = new Intl.NumberFormat("id-ID");
+  var PI_SHEET = 3.14;          // π yang dipakai Excel untuk juring
+  var JARI = 1.05;              // r = D/2, D = 2,10 m
+  var PANJANG = 4.78;           // m
+  var TANGKI = {
+    t1: { tipe: 'rebah', maks: 210 },
+    t2: { tipe: 'rebah', maks: 210 },
+    td: { tipe: 'kotak', maks: 95 }
+  };
+  var SIMPAN = 'hitung-solar-v2';
 
-  // Akses teman: kode berisi tanggal habis + tanda pengaman. Pemilik membuat kode lewat kartu "Buat kode teman".
-  var RAHASIA = "he-jpr-9f3k2xq7m1";
-  var PKEY = "hitung-he-pemilik";
-  var CKEY = "hitung-he-kode";
-  var KUNCI = "hehd0qskgkec";
-  var WIT = 9 * 3600000;
+  // Tangki rebah: tinggi cm -> liter
+  function literRebah(cm) {
+    var r = JARI;
+    var h = cm / 100;
+    var d = h - r;                              // jarak pusat ke permukaan isi
+    var x = Math.max(-1, Math.min(1, d / r));
+    var betaRad = 2 * Math.PI - 2 * Math.acos(x); // sudut pusat bagian isi (radian)
+    var betaDeg = betaRad * 180 / Math.PI;
+    var juring = PI_SHEET * r * r * betaDeg / 360;
+    var segitiga = (r * r / 2) * Math.sin(betaRad);
+    return (juring - segitiga) * PANJANG * 1000;
+  }
 
-  function hash(str) {
-    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-    for (var i = 0; i < str.length; i++) {
-      var c = str.charCodeAt(i);
-      h1 = Math.imul(h1 ^ c, 2654435761);
-      h2 = Math.imul(h2 ^ c, 1597334677);
+  // Tangki kotak (genset): tinggi cm -> liter
+  function literKotak(cm) {
+    return 120 * 118 * cm / 1000;
+  }
+
+  // Baca isian: koma atau titik boleh. Mengembalikan null jika kosong.
+  function bacaAngka(teks) {
+    var t = String(teks).trim().replace(',', '.');
+    if (t === '') return null;
+    var n = Number(t);
+    if (!isFinite(n) || n < 0) return NaN;
+    return n;
+  }
+
+  function hitung(id) {
+    var akhir = id.slice(1);
+    var cfg = TANGKI[id];
+    var input = document.getElementById(id);
+    var errEl = document.getElementById('e' + akhir);
+    var outEl = document.getElementById('r' + akhir);
+    errEl.textContent = '';
+
+    var cm = bacaAngka(input.value);
+    if (cm === null) { outEl.innerHTML = '— <small>liter</small>'; return null; }
+    if (isNaN(cm)) {
+      errEl.textContent = 'Isi tinggi dengan angka 0 atau lebih.';
+      outEl.innerHTML = '— <small>liter</small>';
+      return null;
     }
-    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
-  }
-  function sig(ymd) { return hash(RAHASIA + "|" + ymd).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(-5).padStart(5, "0"); }
-  function p2(n) { return (n < 10 ? "0" : "") + n; }
-  function witParts(ms) {
-    var d = new Date(ms + WIT);
-    return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() };
-  }
-  var HARI = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-  var BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-  function teksTgl(ms) {
-    var d = new Date(ms + WIT);
-    return HARI[d.getUTCDay()] + ", " + d.getUTCDate() + " " + BULAN[d.getUTCMonth()] + " " + d.getUTCFullYear();
-  }
-  function endOf(y, m, d) { return Date.UTC(y, m - 1, d, 23, 59, 59) - WIT; }
-  // hasil: {ok:true, end:ms} | {ok:false, why:"format"|"salah"|"habis", end:ms}
-  function cekKode(raw) {
-    var k = String(raw || "").trim().toUpperCase().replace(/\s+/g, "");
-    var m = /^HE-(\d{6})-([A-Z0-9]{5})$/.exec(k);
-    if (!m) return { ok: false, why: "format" };
-    if (sig(m[1]) !== m[2]) return { ok: false, why: "salah" };
-    var y = 2000 + parseInt(m[1].slice(0, 2), 10), mo = parseInt(m[1].slice(2, 4), 10), d = parseInt(m[1].slice(4, 6), 10);
-    if (mo < 1 || mo > 12 || d < 1 || d > 31) return { ok: false, why: "salah" };
-    var end = endOf(y, mo, d);
-    if (Date.now() > end) return { ok: false, why: "habis", end: end, kode: k };
-    return { ok: true, end: end, kode: k };
-  }
-  function buatKode(hari) {
-    var t = witParts(Date.now() + (hari - 1) * 86400000);
-    var ymd = p2(t.y % 100) + p2(t.m) + p2(t.d);
-    return { kode: "HE-" + ymd + "-" + sig(ymd), end: endOf(t.y, t.m, t.d) };
+    if (cm > cfg.maks) {
+      errEl.textContent = 'Tinggi melebihi batas (maks ' + cfg.maks + ' cm).';
+      outEl.innerHTML = '— <small>liter</small>';
+      return null;
+    }
+
+    var liter = cfg.tipe === 'rebah' ? literRebah(cm) : literKotak(cm);
+    var bulat = Math.round(liter);
+    outEl.innerHTML = bulat.toLocaleString('id-ID') + ' <small>liter</small>';
+    return bulat;
   }
 
-  var pemilik = false, akses = null;
-  try {
-    var q = new URLSearchParams(location.search).get("pemilik");
-    if (q === KUNCI) {
-      localStorage.setItem(PKEY, "1");
-      if (window.history && history.replaceState) history.replaceState(null, "", location.pathname);
+  var totalSekarang = null;
+
+  function hitungSemua() {
+    var a = hitung('t1');
+    var b = hitung('t2');
+    var c = hitung('td');
+    var total = document.getElementById('rt');
+    if (a === null || b === null || c === null || isNaN(a) || isNaN(b) || isNaN(c)) {
+      totalSekarang = null;
+      total.innerHTML = '— <small>liter</small>';
+    } else {
+      totalSekarang = a + b + c;
+      total.innerHTML = totalSekarang.toLocaleString('id-ID') + ' <small>liter</small>';
     }
-    pemilik = localStorage.getItem(PKEY) === "1";
-  } catch (e) {}
-  if (!pemilik) {
-    var tersimpan = "";
-    try { tersimpan = localStorage.getItem(CKEY) || ""; } catch (e) {}
-    akses = cekKode(tersimpan);
-    if (!akses.ok) {
-      var pesan = "", err = false;
-      if (akses.why === "habis") { pesan = "Kode berakhir pada " + teksTgl(akses.end) + ". Minta kode baru ke pemilik aplikasi."; err = true; }
-      document.getElementById("app").innerHTML =
-        '<section class="card"><h2>Kode akses</h2>' +
-        '<div class="gate-row"><input type="text" class="wide" id="gate-in" placeholder="HE-000000-XXXXX" autocomplete="off" autocapitalize="characters" aria-label="Kode akses">' +
-        '<button type="button" class="btn-main" id="gate-ok" style="height:48px;padding:0 20px;border:0;font-weight:600;font-size:1rem">Masuk</button></div>' +
-        '<p class="gate-msg' + (err ? ' err' : '') + '" id="gate-msg">' + pesan + '</p></section>';
-      var gin = document.getElementById("gate-in"), gmsg = document.getElementById("gate-msg");
-      function masuk() {
-        var r = cekKode(gin.value);
-        if (r.ok) {
-          try { localStorage.setItem(CKEY, r.kode); } catch (e) {}
-          location.reload();
-          return;
-        }
-        gmsg.className = "gate-msg err";
-        gmsg.textContent = r.why === "habis" ? "Kode itu sudah berakhir pada " + teksTgl(r.end) + "."
-          : r.why === "format" ? "Format kode salah. Contoh: HE-261117-AB12C" : "Kode tidak dikenali.";
+    simpan();
+    perbaruiWA();
+    perbaruiSB();
+  }
+
+  // ---------- Laporan WA ----------
+  var KUNCI_WA = 'hitung-solar-wa-v1';
+  var BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  // Liter selalu bilangan bulat; titik atau koma dibuang (pemisah ribuan)
+  function bacaBulat(teks) {
+    var t = String(teks).replace(/[^0-9]/g, '');
+    return t === '' ? null : parseInt(t, 10);
+  }
+
+  function angka(n) { return Math.round(n).toLocaleString('id-ID'); }
+
+  function hariIni() {
+    var d = new Date();
+    var bln = ('0' + (d.getMonth() + 1)).slice(-2);
+    var tgl = ('0' + d.getDate()).slice(-2);
+    return d.getFullYear() + '-' + bln + '-' + tgl;
+  }
+
+  // Mengembalikan {teks} atau {error}
+  function buatLaporan() {
+    var tglVal = document.getElementById('wa-tgl').value;
+    var awal = bacaBulat(document.getElementById('wa-awal').value);
+    var jam = bacaBulat(document.getElementById('wa-jam').value);
+    if (!tglVal) return { error: 'Isi tanggal akhir.', id: 'wa-tgl' };
+    if (totalSekarang === null) return { error: 'Isi ketiga tangki dengan tinggi yang valid dulu.', id: 't1' };
+    if (awal === null) return { error: 'Isi stok akhir bulan lalu dulu (contoh: 24315).', id: 'wa-awal' };
+    if (jam === null || jam <= 0) return { error: 'Isi pemakaian per jam (lebih dari 0).', id: 'wa-jam' };
+
+    var d = new Date(tglVal + 'T00:00:00');
+    var perHari = jam * 24;
+    var hari = Math.round(totalSekarang / perHari);
+    var jamCukup = Math.round(totalSekarang / jam);
+    var baris = [
+      'Update Stock Solar Farm-Hatch 01-' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear(),
+      '',
+      'Stok Akhir bulan lalu = ' + angka(awal) + ' liter',
+      '',
+      'Stok Akhir Minggu ini = ' + angka(totalSekarang) + ' liter.',
+      '',
+      'Pemakaian per jam = ' + angka(jam) + ' liter.',
+      '',
+      'Pemakaian perhari = ' + angka(perHari) + ' liter.',
+      '',
+      'Estimasi kecukupan pemakaian = ' + hari + 'hari /= ' + jamCukup + ' Jam'
+    ];
+    return { teks: baris.join('\n') };
+  }
+
+  function perbaruiWA() {
+    var hasil = buatLaporan();
+    var pra = document.getElementById('wa-pratinjau');
+    var err = document.getElementById('wa-err');
+    if (hasil.error) {
+      pra.textContent = '';
+      err.textContent = hasil.error;
+    } else {
+      pra.textContent = hasil.teks;
+      err.textContent = '';
+    }
+  }
+
+  // Nomor format internasional (08xx -> 628xx). Kosong = pilih kontak di WhatsApp.
+  function nomorWA() {
+    var n = document.getElementById('wa-nomor').value.replace(/[^0-9]/g, '');
+    if (n === '') return '';
+    if (n.charAt(0) === '0') n = '62' + n.slice(1);
+    return n;
+  }
+
+  // Kolom yang salah disorot merah, diberi fokus, lalu layar digeser ke sana
+  function tandaiSalah(hasil) {
+    perbaruiWA();
+    ['wa-tgl', 'wa-awal', 'wa-jam', 't1', 't2', 'td'].forEach(function (id) {
+      document.getElementById(id).classList.remove('salah');
+    });
+    if (hasil.id) {
+      var el = document.getElementById(hasil.id);
+      el.classList.add('salah');
+      el.focus();
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  function kirimTeks() {
+    var hasil = buatLaporan();
+    if (hasil.error) { tandaiSalah(hasil); return; }
+    // Langsung pindah ke WhatsApp di tab yang sama (tanpa tab/pop-up baru).
+    // Nomor diisi = langsung ke chat itu; kosong = WhatsApp minta pilih kontak.
+    var tujuan = nomorWA();
+    window.location.href = 'https://wa.me/' + tujuan + '?text=' + encodeURIComponent(hasil.teks);
+  }
+
+  function kirimGambar() {
+    var hasil = buatLaporan();
+    if (hasil.error) { tandaiSalah(hasil); return; }
+    var baris = hasil.teks.split('\n');
+    var lebar = 720, pad = 36, lh = 40;
+    var tinggi = 110;
+    baris.forEach(function (b, i) { if (i > 0) tinggi += b === '' ? 18 : lh; });
+    tinggi += 40;
+
+    var c = document.createElement('canvas');
+    c.width = lebar; c.height = tinggi;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, lebar, tinggi);
+    ctx.fillStyle = '#0b6bcb';
+    ctx.fillRect(0, 0, lebar, 90);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px system-ui, sans-serif';
+    ctx.fillText(baris[0], pad, 56);
+
+    ctx.fillStyle = '#1d2430';
+    ctx.font = '26px system-ui, sans-serif';
+    var y = 130;
+    baris.forEach(function (b, i) {
+      if (i === 0) return;
+      if (b === '') { y += 18; return; }
+      ctx.fillText(b, pad, y);
+      y += lh;
+    });
+
+    c.toBlob(function (blob) {
+      if (!blob) { perbaruiWA(); return; }
+      var berkas = new File([blob], 'update-stock-solar.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [berkas] })) {
+        navigator.share({ files: [berkas], title: 'Update Stock Solar' }).catch(function () {});
+      } else {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'update-stock-solar.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
       }
-      document.getElementById("gate-ok").addEventListener("click", masuk);
-      gin.addEventListener("keydown", function (e) { if (e.key === "Enter") masuk(); });
+    }, 'image/png');
+  }
+
+  function simpanWA() {
+    try {
+      localStorage.setItem(KUNCI_WA, JSON.stringify({
+        awal: document.getElementById('wa-awal').value,
+        jam: document.getElementById('wa-jam').value,
+        nomor: document.getElementById('wa-nomor').value
+      }));
+    } catch (e) { /* abaikan */ }
+  }
+
+  function muatWA() {
+    document.getElementById('wa-tgl').value = hariIni();
+    document.getElementById('wa-jam').value = '80';
+    try {
+      var data = JSON.parse(localStorage.getItem(KUNCI_WA) || '{}');
+      if (data.awal !== undefined) document.getElementById('wa-awal').value = data.awal;
+      if (data.jam !== undefined) document.getElementById('wa-jam').value = data.jam;
+      if (data.nomor !== undefined) document.getElementById('wa-nomor').value = data.nomor;
+    } catch (e) { /* abaikan */ }
+  }
+
+  // ---------- Stok berjalan ----------
+  var KUNCI_SB = 'hitung-solar-berjalan-v1';
+  var STOK_AWAL = { stok: 24057, tgl: '2026-11-20', riwayat: [] };
+
+  function muatSB() {
+    try {
+      var d = JSON.parse(localStorage.getItem(KUNCI_SB) || 'null');
+      return d && d.stok !== undefined ? d : JSON.parse(JSON.stringify(STOK_AWAL));
+    } catch (e) { return JSON.parse(JSON.stringify(STOK_AWAL)); }
+  }
+
+  function simpanSB(d) {
+    try { localStorage.setItem(KUNCI_SB, JSON.stringify(d)); } catch (e) { /* abaikan */ }
+  }
+
+  function tglIndo(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    return d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function perbaruiSB() {
+    var d = muatSB();
+    document.getElementById('sb-info').textContent =
+      'Stok berjalan: ' + angka(d.stok) + ' liter (' + tglIndo(d.tgl) + ')';
+    var pakai = document.getElementById('sb-pakai');
+    if (totalSekarang === null) {
+      pakai.textContent = 'Isi tinggi ketiga tangki untuk melihat pemakaian.';
       return;
     }
+    var sel = d.stok - totalSekarang;
+    if (sel > 0) pakai.textContent = 'Pemakaian sejak ' + tglIndo(d.tgl) + ': ' + angka(sel) + ' liter';
+    else if (sel === 0) pakai.textContent = 'Tidak ada pemakaian sejak ' + tglIndo(d.tgl) + '.';
+    else pakai.textContent = 'Stok naik ' + angka(-sel) + ' liter. Cek apakah ada Masuk yang belum dicatat.';
   }
 
-  var SECS = [
-    {
-      id: "he", title: "Hitung HE", hasPack: true,
-      head: ["Batch ID", "Keranjang isi", "Butir datang", "Keranjang", "Tray", "Eceran", "Total"],
-    },
-    {
-      id: "koli", title: "Hitung Koli 360", hasPack: false, pack: 360, subSize: 30,
-      head: ["Batch ID", "Butir datang", "Koli", "Rak", "Eceran", "Total"],
+  function simpanStokSekarang() {
+    var err = document.getElementById('sb-err');
+    err.textContent = '';
+    if (totalSekarang === null) { err.textContent = 'Isi ketiga tangki dengan tinggi yang valid dulu.'; return; }
+    var d = muatSB();
+    var sel = d.stok - totalSekarang;
+    if (sel < 0) {
+      err.textContent = 'Stok fisik lebih besar dari stok berjalan. Tidak disimpan. Cek apakah ada Masuk yang belum dicatat.';
+      return;
     }
-  ];
-  var SUB = { 180: 36, 210: 42 };
-
-  function defaults() {
-    return {
-      he: { 15: { p: 180, v: "" }, 16: { p: 180, v: "" }, 17: { p: 210, v: "" }, 18: { p: 210, v: "" } },
-      koli: { 15: "", 16: "", 17: "", 18: "" },
-      r: "", j: "",
-      sv: { he: false, koli: false }
-    };
-  }
-  function norm(s, k) {
-    var d = defaults();
-    try {
-      if (s && s.he && s.koli) {
-        BATCHES.forEach(function (b) {
-          if (s.he[b]) {
-            d.he[b].p = s.he[b].p === 210 ? 210 : 180;
-            d.he[b].v = String(s.he[b].v || "").replace(/\D/g, "");
-          }
-          if (s.koli[b] != null) d.koli[b] = String(s.koli[b]).replace(/\D/g, "");
-        });
-        d.r = String(s.r || "").replace(/\D/g, "");
-        d.j = String(s.j || "").replace(/[^\d.:]/g, "");
-        if (s.sv) { d.sv.he = !!s.sv.he; d.sv.koli = !!s.sv.koli; }
-        else {
-          d.sv.he = BATCHES.some(function (b) { return d.he[b].v !== ""; });
-          d.sv.koli = BATCHES.some(function (b) { return d.koli[b] !== ""; });
-        }
-      }
-    } catch (e) {}
-    if (!d.r) d.r = DEF_R[k];
-    return d;
-  }
-  var SESI = ["siang", "sore", "malam"];
-  var SESI_NAMA = { siang: "Rett 001", sore: "Rett 002", malam: "Rett 003" };
-  var DEF_R = { siang: "001", sore: "002", malam: "003" };
-  var SKEY = "hitung-he-v2-sesi";
-  function load() {
-    var st = { aktif: "siang", s: {}, tgl: null };
-    var raw = null;
-    try { raw = JSON.parse(localStorage.getItem(SKEY)); } catch (e) {}
-    if (raw && raw.s) {
-      SESI.forEach(function (k) { st.s[k] = norm(raw.s[k], k); });
-      if (SESI.indexOf(raw.aktif) >= 0) st.aktif = raw.aktif;
-      if (/^\d{4}-\d{2}-\d{2}$/.test(raw.tgl || "")) st.tgl = raw.tgl;
+    var hariSekarang = hariIni();
+    var entri = { tgl: hariSekarang, stokSebelum: d.stok, stok: totalSekarang, pakai: sel };
+    var riwayat = d.riwayat || [];
+    if (riwayat.length && riwayat[riwayat.length - 1].tgl === hariSekarang) {
+      // Hitung ulang di hari yang sama: ganti catatan terakhir
+      entri.stokSebelum = riwayat[riwayat.length - 1].stokSebelum;
+      entri.pakai = entri.stokSebelum - totalSekarang;
+      riwayat[riwayat.length - 1] = entri;
     } else {
-      var old = null, oldR = null;
-      try { old = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-      try { oldR = JSON.parse(localStorage.getItem(KEY + "-rett")); } catch (e) {}
-      var first = norm(old, "siang");
-      if (oldR) first.j = String(oldR.j || "").replace(/[^\d.:]/g, "");
-      SESI.forEach(function (k) { st.s[k] = k === "siang" ? first : norm(null, k); });
+      riwayat.push(entri);
     }
-    return st;
-  }
-  var store = load();
-  var state = store.s[store.aktif];
-  var lihat = store.aktif;
-  var infoHapus = "";
-  function hariIni() { var t = witParts(Date.now()); return t.y + "-" + p2(t.m) + "-" + p2(t.d); }
-  function msDariKunci(k) { var a = k.split("-"); return Date.UTC(+a[0], +a[1] - 1, +a[2], 12, 0, 0) - WIT; }
-  function adaData() {
-    return SESI.some(function (x) {
-      var sd = store.s[x];
-      return BATCHES.some(function (b) { return sd.he[b].v !== "" || sd.koli[b] !== ""; }) || sd.r !== DEF_R[x] || sd.j !== "";
-    });
-  }
-  function save() {
-    if (!adaData()) store.tgl = null; else if (!store.tgl) store.tgl = hariIni();
-    try { localStorage.setItem(SKEY, JSON.stringify(store)); } catch (e) {}
-  }
-  function jamSekarang() {
-    var d = new Date(Date.now() + WIT);
-    return p2(d.getUTCHours()) + "." + p2(d.getUTCMinutes());
-  }
-  function tglData() { return teksTgl(msDariKunci(store.tgl || hariIni())); }
-
-  function fmt(n) { return nf.format(n); }
-  function split(total, pack, subSize) {
-    var full = Math.floor(total / pack);
-    var rest = total - full * pack;
-    var sub = Math.floor(rest / subSize);
-    return { full: full, sub: sub, ecer: rest - sub * subSize };
+    d = { stok: totalSekarang, tgl: hariSekarang, riwayat: riwayat.slice(-60) };
+    simpanSB(d);
+    perbaruiSB();
   }
 
-  var app = document.getElementById("app");
-
-  function build(sec) {
-    var h = '<section class="card" id="sec-' + sec.id + '"><h2>' + sec.title + '<span class="st"></span></h2>' +
-      '<div class="scroll"><table><thead><tr>' +
-      sec.head.map(function (t) { return "<th>" + t + "</th>"; }).join("") +
-      "</tr></thead><tbody>";
-    BATCHES.forEach(function (b) {
-      h += '<tr data-b="' + b + '"><td class="batch">Batch ' + b + "</td>";
-      if (sec.hasPack) {
-        h += '<td><button type="button" class="pk" data-b="' + b + '" aria-label="Keranjang isi batch ' + b + '">' + state.he[b].p + "</button></td>";
-      }
-      h += '<td><input type="text" inputmode="numeric" autocomplete="off" id="' + sec.id + "-" + b +
-        '" aria-label="Butir datang batch ' + b + '" data-b="' + b + '"></td>' +
-        '<td class="out o-full">-</td><td class="out o-sub">-</td><td class="out o-ecer">-</td><td class="out tot o-tot">-</td></tr>';
-    });
-    h += '<tr class="sum"><td class="batch" colspan="' + (sec.hasPack ? 2 : 1) + '">Total</td>' +
-      '<td class="s-butir">-</td><td class="s-full">-</td><td class="s-sub">-</td><td class="s-ecer">-</td><td class="s-tot">-</td></tr>';
-    h += '</tbody></table></div><div class="actions">' +
-      '<button type="button" class="btn-main" data-act="simpan">Simpan</button>' +
-      '<button type="button" class="btn-ghost" data-act="edit">Edit</button>' +
-      '<button type="button" class="btn-ghost" data-act="clear">Kosongkan</button></div></section>';
-    return h;
-  }
-
-  function tabsHtml() {
-    return '<p class="hari" id="hari"></p><div class="tabs" id="tabs" role="group" aria-label="Kedatangan">' + SESI.concat("total").map(function (k) {
-      return '<button type="button" data-s="' + k + '">' + (k === "total" ? "Total" : SESI_NAMA[k]) + '<i></i></button>';
-    }).join("") + '</div>';
-  }
-  function gabHtml() {
-    var h = '<section class="card" id="sec-gab"><h2>Gabungan Rett</h2>' +
-      '<div class="scroll"><table><thead><tr><th>Batch ID</th><th>Krjg</th><th>Dus HE</th><th>Jmlh. HE</th></tr></thead><tbody>';
-    BATCHES.forEach(function (b) {
-      h += '<tr><td class="batch">' + b + '</td><td id="gk-' + b + '">-</td><td id="gd-' + b + '">-</td><td id="gj-' + b + '">-</td></tr>';
-    });
-    h += '<tr class="sum"><td class="batch">Total</td><td id="gk-t">-</td><td id="gd-t">-</td><td></td></tr>' +
-      '<tr class="sum2"><td class="batch" colspan="3">Jumlah Koli : <span id="gkoli">-</span></td><td id="gj-t">-</td></tr>' +
-      '</tbody></table></div>' +
-      '<div class="slip-meta" style="margin-top:10px"><span>T.42 : <b id="gt42">-</b></span><span>T.36 : <b id="gt36">-</b></span></div>' +
-      '<div class="gab-sub">Per kedatangan</div>' +
-      '<div class="scroll"><table><thead><tr><th class="l">Kedatangan</th><th>Jam</th><th>Jmlh. HE</th></tr></thead><tbody>';
-    SESI.forEach(function (k) {
-      h += '<tr><td class="batch" id="gr-' + k + '">' + SESI_NAMA[k] + '</td><td id="gm-' + k + '">-</td><td id="gs-' + k + '">-</td></tr>';
-    });
-    h += '</tbody></table></div><div class="actions"><button type="button" class="btn-ghost" data-act="copy">Salin</button></div>' +
-      '<div class="actions" style="margin-top:22px"><button type="button" class="btn-del" id="gab-reset">Hapus semua</button></div></section>';
-    return h;
-  }
-
-  app.innerHTML = tabsHtml() + SECS.map(build).join("") + slipHtml() + gabHtml();
-  var sisa = akses ? Math.ceil((akses.end - Date.now()) / 86400000) : 0;
-  app.insertAdjacentHTML("beforeend", '<p class="foot">' + (pemilik ? 'Mode pemilik · tanpa batas waktu' :
-    'Berlaku sampai ' + teksTgl(akses.end) + ' · ' + (sisa > 1 ? 'sisa ' + sisa + ' hari' : 'berakhir hari ini pukul 23.59')) + '</p>');
-
-  function slipHtml() {
-    var h = '<section class="card" id="sec-slip"><h2>Ringkasan Rett</h2>' +
-      '<div class="slip-top">' +
-      '<div><label for="rett">Rett</label><input type="text" id="rett" inputmode="numeric" autocomplete="off" placeholder="001"></div>' +
-      '<div><label for="jam">Jam tiba (WIT)<button type="button" class="mini" id="jam-now">Sekarang</button></label><input type="text" id="jam" inputmode="decimal" autocomplete="off" placeholder="19.30"></div>' +
-      '</div>' +
-      '<div class="slip-meta"><span>T.42 : <b id="t42">-</b></span><span>T.36 : <b id="t36">-</b></span></div>' +
-      '<div class="scroll"><table><thead><tr><th>Batch ID</th><th>Krjg</th><th>Dus HE</th><th>Jmlh. HE</th></tr></thead><tbody>';
-    BATCHES.forEach(function (b) {
-      h += '<tr><td class="batch">' + b + '</td><td id="sk-' + b + '">-</td><td id="sd-' + b + '">-</td><td id="sj-' + b + '">-</td></tr>';
-    });
-    h += '<tr class="sum"><td class="batch">Total</td><td id="sk-t">-</td><td id="sd-t">-</td><td></td></tr>' +
-      '<tr class="sum2"><td class="batch" colspan="3">Jumlah Koli : <span id="skoli">-</span></td><td id="sj-t">-</td></tr>' +
-      '</tbody></table></div><div class="actions"><button type="button" class="btn-ghost" data-act="copy">Salin</button></div></section>';
-    return h;
-  }
-
-  function slip() {
-    var tk = 0, td = 0, t42 = 0, t36 = 0;
-    function put(id, n) { document.getElementById(id).textContent = n > 0 ? fmt(n) : "-"; }
-    BATCHES.forEach(function (b) {
-      var k = cnt(SECS[0], b), d = cnt(SECS[1], b);
-      put("sk-" + b, k); put("sd-" + b, d); put("sj-" + b, k + d);
-      tk += k; td += d;
-      if (k > 0) {
-        var p = state.he[b].p;
-        var r = split(k, p, SUB[p]);
-        if (p === 210) t42 += r.sub; else t36 += r.sub;
-      }
-    });
-    put("sk-t", tk); put("sd-t", td); put("sj-t", tk + td);
-    put("t42", t42); put("t36", t36);
-    var kt = "-";
-    if (td > 0) {
-      var q = split(td, 360, 30), parts = [];
-      if (q.full) parts.push(fmt(q.full) + " koli");
-      if (q.sub) parts.push(q.sub + " rak");
-      if (q.ecer) parts.push(q.ecer + " eceran");
-      kt = parts.join(" + ");
-    }
-    document.getElementById("skoli").textContent = kt;
-    gab();
-  }
-
-  function sval(sd, id, b) {
-    if (!sd.sv[id]) return 0;
-    var raw = id === "he" ? sd.he[b].v : sd.koli[b];
-    return raw === "" ? 0 : parseInt(raw, 10);
-  }
-  function terisi(sd) {
-    return BATCHES.some(function (b) { return sval(sd, "he", b) > 0 || sval(sd, "koli", b) > 0; });
-  }
-  function gabData() {
-    var g = { rows: {}, tk: 0, td: 0, t42: 0, t36: 0, per: {} };
-    BATCHES.forEach(function (b) {
-      var k = 0, d = 0;
-      SESI.forEach(function (x) {
-        var sd = store.s[x], kk = sval(sd, "he", b);
-        k += kk; d += sval(sd, "koli", b);
-        if (kk > 0) {
-          var p = sd.he[b].p, r = split(kk, p, SUB[p]);
-          if (p === 210) g.t42 += r.sub; else g.t36 += r.sub;
-        }
-      });
-      g.rows[b] = { k: k, d: d };
-      g.tk += k; g.td += d;
-    });
-    SESI.forEach(function (x) {
-      var sd = store.s[x], t = 0;
-      BATCHES.forEach(function (b) { t += sval(sd, "he", b) + sval(sd, "koli", b); });
-      g.per[x] = { t: t, r: sd.r, j: sd.j };
-    });
-    g.koli = "-";
-    if (g.td > 0) {
-      var q = split(g.td, 360, 30), parts = [];
-      if (q.full) parts.push(fmt(q.full) + " koli");
-      if (q.sub) parts.push(q.sub + " rak");
-      if (q.ecer) parts.push(q.ecer + " eceran");
-      g.koli = parts.join(" + ");
-    }
-    return g;
-  }
-  function gab() {
-    var g = gabData();
-    function put(id, n) { document.getElementById(id).textContent = n > 0 ? fmt(n) : "-"; }
-    BATCHES.forEach(function (b) {
-      var r = g.rows[b];
-      put("gk-" + b, r.k); put("gd-" + b, r.d); put("gj-" + b, r.k + r.d);
-    });
-    put("gk-t", g.tk); put("gd-t", g.td); put("gj-t", g.tk + g.td);
-    put("gt42", g.t42); put("gt36", g.t36);
-    document.getElementById("gkoli").textContent = g.koli;
-    SESI.forEach(function (x) {
-      var p = g.per[x];
-      document.getElementById("gr-" + x).textContent = "Rett " + (p.r || DEF_R[x]);
-      document.getElementById("gm-" + x).textContent = p.j || "-";
-      put("gs-" + x, p.t);
-    });
-    var hr = document.getElementById("hari"), now = hariIni();
-    hr.textContent = teksTgl(msDariKunci(now));
-    if (store.tgl) infoHapus = "";
-    if (infoHapus) {
-      var sm = document.createElement("small");
-      sm.textContent = infoHapus;
-      hr.appendChild(sm);
-    }
-    document.querySelectorAll("#tabs button").forEach(function (btn) {
-      var k = btn.getAttribute("data-s");
-      btn.classList.toggle("on", k === lihat);
-      btn.querySelector("i").textContent = (k !== "total" && terisi(store.s[k])) ? "●" : "";
-    });
-  }
-
-  function cnt(sec, b) { return state.sv[sec.id] ? val(sec, b) : 0; }
-  function val(sec, b) {
-    var raw = sec.id === "he" ? state.he[b].v : state.koli[b];
-    return raw === "" ? 0 : parseInt(raw, 10);
-  }
-
-  function setCell(el, text, has, sub) {
-    el.textContent = text;
-    el.classList.toggle("has", !!has);
-    if (sub) el.setAttribute("data-sub", sub); else el.removeAttribute("data-sub");
-  }
-
-  function clearOut(sec) {
-    var root = document.getElementById("sec-" + sec.id);
-    root.querySelectorAll("td.out").forEach(function (c) { setCell(c, "-", false); });
-    ["s-butir", "s-full", "s-sub", "s-ecer", "s-tot"].forEach(function (k) {
-      root.querySelector("." + k).textContent = "-";
-    });
-  }
-
-  function rinci(sec) {
-    var root = document.getElementById("sec-" + sec.id);
-    var sums = { butir: 0, full: 0, sub: 0, ecer: 0 };
-    var any = false;
-    BATCHES.forEach(function (b) {
-      var row = root.querySelector('tr[data-b="' + b + '"]');
-      var v = val(sec, b);
-      var cells = ["o-full", "o-sub", "o-ecer", "o-tot"].map(function (k) { return row.querySelector("." + k); });
-      if (v <= 0) { cells.forEach(function (c) { setCell(c, "-", false); }); return; }
-      var pack = sec.hasPack ? state.he[b].p : sec.pack;
-      var subSize = sec.hasPack ? SUB[pack] : sec.subSize;
-      var r = split(v, pack, subSize);
-      setCell(cells[0], r.full ? fmt(r.full) : "-", r.full, r.full ? fmt(r.full * pack) : "");
-      setCell(cells[1], r.sub ? fmt(r.sub) : "-", r.sub, r.sub ? fmt(r.sub * subSize) : "");
-      setCell(cells[2], r.ecer ? fmt(r.ecer) : "-", r.ecer);
-      setCell(cells[3], fmt(r.full * pack + r.sub * subSize + r.ecer), true);
-      sums.butir += v; sums.full += r.full; sums.sub += r.sub; sums.ecer += r.ecer;
-      any = true;
-    });
-    function put(k, n) { root.querySelector("." + k).textContent = any && n ? fmt(n) : "-"; }
-    put("s-butir", sums.butir); put("s-full", sums.full); put("s-sub", sums.sub);
-    put("s-ecer", sums.ecer); put("s-tot", sums.butir);
-  }
-
-  SECS.forEach(function (sec) {
-    var root = document.getElementById("sec-" + sec.id);
-    var inputs = BATCHES.map(function (b) { return document.getElementById(sec.id + "-" + b); });
-
-    inputs.forEach(function (inp, i) {
-      var b = BATCHES[i];
-      inp.value = sec.id === "he" ? state.he[b].v : state.koli[b];
-
-      inp.addEventListener("input", function () {
-        var clean = inp.value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-        if (clean !== inp.value) inp.value = clean;
-        if (sec.id === "he") state.he[b].v = clean; else state.koli[b] = clean;
-        if (state.sv[sec.id]) return;
-        if (clean !== "" && !state.j) { state.j = jamSekarang(); document.getElementById("jam").value = state.j; }
-        save();
-        clearOut(sec);
-        slip();
-      });
-
-      inp.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          if (i === inputs.length - 1) { simpan(sec, root.querySelector('[data-act="simpan"]')); inp.blur(); } else inputs[i + 1].focus();
-        } else if (e.key === "ArrowDown") {
-          e.preventDefault();
-          if (i < inputs.length - 1) inputs[i + 1].focus();
-        } else if (e.key === "ArrowUp") {
-          e.preventDefault();
-          if (i > 0) inputs[i - 1].focus();
-        }
-      });
-      inp.addEventListener("focus", function () { try { inp.select(); } catch (e) {} });
-    });
-
-    if (sec.hasPack) {
-      root.querySelectorAll("button.pk").forEach(function (btn) {
-        var b = btn.getAttribute("data-b");
-        function setPack(p) {
-          state.he[b].p = p;
-          btn.textContent = p;
-          save();
-          clearOut(sec);
-          slip();
-        }
-        btn.addEventListener("click", function () { setPack(state.he[b].p === 180 ? 210 : 180); });
-        btn.addEventListener("keydown", function (e) {
-          if (e.key === "1") setPack(180);
-          else if (e.key === "2") setPack(210);
-        });
-      });
-    }
-
-    root.querySelector('[data-act="simpan"]').addEventListener("click", function () { simpan(sec, this); });
-    root.querySelector('[data-act="edit"]').addEventListener("click", function () {
-      state.sv[sec.id] = false; save(); clearOut(sec); kunci(sec); slip();
-      inputs[0].focus();
-    });
-    root.querySelector('[data-act="clear"]').addEventListener("click", function () {
-      konfirmasi("Yakin menghapus data " + sec.title + " " + SESI_NAMA[store.aktif] + "?", "Hapus", function () {
-        BATCHES.forEach(function (b, i) {
-          if (sec.id === "he") state.he[b].v = ""; else state.koli[b] = "";
-          inputs[i].value = "";
-        });
-        state.sv[sec.id] = false;
-        save(); clearOut(sec); kunci(sec); slip();
-      });
-    });
-
-    if (state.sv[sec.id]) rinci(sec);
-    kunci(sec);
-  });
-
-  function kunci(sec) {
-    var root = document.getElementById("sec-" + sec.id), on = !!state.sv[sec.id];
-    BATCHES.forEach(function (b) { document.getElementById(sec.id + "-" + b).disabled = on; });
-    root.querySelectorAll("button.pk").forEach(function (btn) { btn.disabled = on; });
-    root.querySelector('[data-act="simpan"]').disabled = on;
-    root.querySelector('[data-act="edit"]').disabled = !on;
-    var st = root.querySelector(".st");
-    st.textContent = on ? "Tersimpan" : "Belum disimpan";
-    st.className = "st" + (on ? " ok" : "");
-  }
-  function simpan(sec, btn) {
-    if (!BATCHES.some(function (b) { return val(sec, b) > 0; })) { flash(btn, "Isi dulu"); return; }
-    state.sv[sec.id] = true; save(); rinci(sec); kunci(sec); slip();
-  }
-  function konfirmasi(pesan, label, aksi) {
-    var ov = document.createElement("div");
-    ov.className = "ov";
-    ov.innerHTML = '<div class="dlg" role="dialog" aria-modal="true"><p></p><div class="actions">' +
-      '<button type="button" class="btn-ghost" data-x="n">Batal</button>' +
-      '<button type="button" class="btn-danger" data-x="y"></button></div></div>';
-    ov.querySelector("p").textContent = pesan;
-    ov.querySelector('[data-x="y"]').textContent = label;
-    function tutup() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
-    ov.addEventListener("click", function (e) {
-      var x = e.target.getAttribute && e.target.getAttribute("data-x");
-      if (x === "y") { tutup(); aksi(); } else if (x === "n" || e.target === ov) tutup();
-    });
-    document.body.appendChild(ov);
-    ov.querySelector('[data-x="n"]').focus();
-  }
-
-  (function () {
-    var r = document.getElementById("rett"), j = document.getElementById("jam");
-    r.value = state.r; j.value = state.j;
-    r.addEventListener("input", function () { r.value = r.value.replace(/\D/g, ""); state.r = r.value; save(); gab(); });
-    j.addEventListener("input", function () { j.value = j.value.replace(/[^\d.:]/g, ""); state.j = j.value; save(); gab(); });
-    document.getElementById("jam-now").addEventListener("click", function () {
-      state.j = jamSekarang(); j.value = state.j; save(); gab();
-    });
-    r.addEventListener("blur", function () {
-      if (r.value === "") { r.value = DEF_R[store.aktif]; state.r = r.value; save(); gab(); }
-    });
-  })();
-
-  function tampil() {
-    SECS.forEach(function (sec) {
-      BATCHES.forEach(function (b) {
-        document.getElementById(sec.id + "-" + b).value = sec.id === "he" ? state.he[b].v : state.koli[b];
-      });
-      if (sec.hasPack) {
-        document.querySelectorAll("#sec-" + sec.id + " button.pk").forEach(function (btn) {
-          btn.textContent = state.he[btn.getAttribute("data-b")].p;
-        });
-      }
-      clearOut(sec);
-      if (state.sv[sec.id]) rinci(sec);
-      kunci(sec);
-    });
-    document.getElementById("rett").value = state.r;
-    document.getElementById("jam").value = state.j;
-    slip();
-  }
-  document.querySelectorAll("#tabs button").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var k = btn.getAttribute("data-s");
-      if (k === lihat) return;
-      lihat = k;
-      if (k !== "total") { store.aktif = k; state = store.s[k]; save(); }
-      aturLihat(); tampil();
-      try { window.scrollTo(0, 0); } catch (e) {}
-    });
-  });
-  function aturLihat() {
-    var tot = lihat === "total";
-    ["sec-he", "sec-koli", "sec-slip"].forEach(function (id) { document.getElementById(id).style.display = tot ? "none" : ""; });
-    document.getElementById("sec-gab").style.display = tot ? "" : "none";
-    var gn = document.getElementById("sec-gen");
-    if (gn) gn.style.display = tot ? "" : "none";
-  }
-  aturLihat();
-
-  function hapusSemua() {
-    SESI.forEach(function (k) { store.s[k] = norm(null, k); });
-    state = store.s[store.aktif]; save(); tampil();
-  }
-  document.getElementById("gab-reset").addEventListener("click", function () {
-    konfirmasi("Yakin menghapus semua data Rett 001, 002, dan 003?", "Hapus semua", hapusSemua);
-  });
-  // Ganti tanggal (WIT): data hari sebelumnya terhapus otomatis.
-  function cekTanggal() {
-    if (store.tgl && store.tgl !== hariIni()) {
-      infoHapus = "Data tanggal sebelumnya dihapus otomatis";
-      hapusSemua();
-    }
-  }
-  document.addEventListener("visibilitychange", cekTanggal);
-  window.addEventListener("focus", cekTanggal);
-  setInterval(cekTanggal, 60000);
-
-  document.querySelector('#sec-gab [data-act="copy"]').addEventListener("click", function () {
-    copyText(this, textGab());
-  });
-
-  function textGab() {
-    var g = gabData(), lines = [];
-    BATCHES.forEach(function (b) {
-      var r = g.rows[b];
-      if (r.k + r.d <= 0) return;
-      lines.push("Batch " + b + " : Krjg " + (r.k ? fmt(r.k) : "-") + " | Dus HE " + (r.d ? fmt(r.d) : "-") + " | Jmlh " + fmt(r.k + r.d));
-    });
-    if (!lines.length) return "";
-    var per = [];
-    SESI.forEach(function (x) {
-      var p = g.per[x];
-      if (p.t > 0) per.push("Rett " + (p.r || DEF_R[x]) + (p.j ? " | " + p.j + " WIT" : "") + " : " + fmt(p.t));
-    });
-    return "GABUNGAN RETT | " + tglData() + "\n" + per.join("\n") + "\n" + lines.join("\n") +
-      "\nT.42 : " + (g.t42 ? fmt(g.t42) : "-") + "\nT.36 : " + (g.t36 ? fmt(g.t36) : "-") +
-      "\nTotal : Krjg " + (g.tk ? fmt(g.tk) : "-") + " | Dus HE " + (g.td ? fmt(g.td) : "-") +
-      "\nJumlah Koli : " + g.koli + "\nJmlh. HE : " + fmt(g.tk + g.td);
-  }
-
-  document.querySelector('#sec-slip [data-act="copy"]').addEventListener("click", function () {
-    copyText(this, textSlip());
-  });
-
-  function textSec(sec) {
-    var lines = [], tot = 0;
-    BATCHES.forEach(function (b) {
-      var v = val(sec, b);
-      if (v <= 0) return;
-      var pack = sec.hasPack ? state.he[b].p : sec.pack;
-      var subSize = sec.hasPack ? SUB[pack] : sec.subSize;
-      var r = split(v, pack, subSize), parts = [];
-      if (r.full) parts.push(fmt(r.full) + (sec.hasPack ? " krj" : " koli"));
-      if (r.sub) parts.push(r.sub + (sec.hasPack ? " tray" : " rak"));
-      if (r.ecer) parts.push(r.ecer + " eceran");
-      lines.push("Batch " + b + (sec.hasPack ? " (krj " + pack + ")" : "") + " : " + parts.join(" + ") + " | " + fmt(v));
-      tot += v;
-    });
-    if (!lines.length) return "";
-    return sec.title.toUpperCase() + "\n" + lines.join("\n") + "\nTotal : " + fmt(tot);
-  }
-
-  function textSlip() {
-    function g(id) { return document.getElementById(id).textContent; }
-    var rett = document.getElementById("rett").value, jam = document.getElementById("jam").value;
-    var lines = [];
-    BATCHES.forEach(function (b) {
-      if (g("sj-" + b) === "-") return;
-      lines.push("Batch " + b + " : Krjg " + g("sk-" + b) + " | Dus HE " + g("sd-" + b) + " | Jmlh " + g("sj-" + b));
-    });
-    if (!lines.length) return "";
-    var head = "RINGKASAN RETT" + (rett ? " " + rett : "") + (jam ? " | " + jam + " WIT" : "") + "\n" + tglData();
-    return head + "\nT.42 : " + g("t42") + "\nT.36 : " + g("t36") + "\n" + lines.join("\n") +
-      "\nTotal : Krjg " + g("sk-t") + " | Dus HE " + g("sd-t") +
-      "\nJumlah Koli : " + g("skoli") + "\nJmlh. HE : " + g("sj-t");
-  }
-
-  function flash(btn, msg) {
-    var o = btn.getAttribute("data-label") || btn.textContent;
-    btn.setAttribute("data-label", o);
-    btn.textContent = msg;
-    clearTimeout(btn._t);
-    btn._t = setTimeout(function () { btn.textContent = o; }, 1800);
-  }
-
-  function legacyCopy(text) {
-    var ta = document.createElement("textarea");
-    ta.value = text;
-    ta.setAttribute("readonly", "");
-    ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
-    document.body.appendChild(ta);
-    ta.select();
-    try { ta.setSelectionRange(0, text.length); } catch (e) {}
-    var ok = false;
-    try { ok = document.execCommand("copy"); } catch (e) {}
-    document.body.removeChild(ta);
-    return ok;
-  }
-
-  function copyText(btn, text) {
-    if (!text) { flash(btn, "Belum ada data"); return; }
-    if (legacyCopy(text)) { flash(btn, "Tersalin"); return; }
+  function simpan() {
     try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function () { flash(btn, "Tersalin"); }, function () { flash(btn, "Gagal menyalin"); });
-        return;
-      }
-    } catch (e) {}
-    flash(btn, "Gagal menyalin");
+      var data = {};
+      ['t1', 't2', 'td'].forEach(function (id) {
+        data[id] = document.getElementById(id).value;
+      });
+      localStorage.setItem(SIMPAN, JSON.stringify(data));
+    } catch (e) { /* localStorage tidak tersedia */ }
   }
 
-  if (pemilik) {
-    var gen = document.createElement("section");
-    gen.className = "card";
-    gen.id = "sec-gen";
-    gen.innerHTML = '<h2>Buat kode teman</h2>' +
-      '<div class="gate-row"><input type="text" id="gen-hari" inputmode="numeric" value="7" aria-label="Jumlah hari" style="width:70px">' +
-      '<span>hari</span><button type="button" class="btn-main" id="gen-go" style="height:48px;padding:0 20px;border:0;font-weight:600;font-size:1rem">Buat</button></div>' +
-      '<div class="kode-out" id="gen-out"></div><p class="gate-msg" id="gen-info"></p>' +
-      '<div class="gate-row"><input type="text" class="wide" id="gen-wa" inputmode="tel" placeholder="No. WA teman (boleh kosong)" autocomplete="off" aria-label="Nomor WA teman" style="text-transform:none;letter-spacing:0"></div>' +
-      '<div class="actions" style="justify-content:center"><button type="button" class="btn-ghost" id="gen-copy">Salin kode</button>' +
-      '<button type="button" class="btn-main" id="gen-send">Kirim WA</button></div>';
-    app.insertBefore(gen, app.querySelector(".foot"));
-    aturLihat();
-    var lastMsg = "", lastEnd = 0;
-    document.getElementById("gen-go").addEventListener("click", function () {
-      var n = parseInt(document.getElementById("gen-hari").value, 10);
-      if (!(n >= 1 && n <= 90)) n = 7;
-      document.getElementById("gen-hari").value = n;
-      var r = buatKode(n);
-      document.getElementById("gen-out").textContent = r.kode;
-      document.getElementById("gen-info").textContent = "Berlaku sampai " + teksTgl(r.end) + " pukul 23.59 WIT (" + n + " hari termasuk hari ini)";
-      lastMsg = r.kode; lastEnd = r.end;
-    });
-    document.getElementById("gen-send").addEventListener("click", function () {
-      if (!lastMsg) document.getElementById("gen-go").click();
-      var no = document.getElementById("gen-wa").value.replace(/\D/g, "");
-      if (no.indexOf("0") === 0) no = "62" + no.slice(1);
-      else if (no.indexOf("8") === 0) no = "62" + no;
-      var teks = lastMsg;
-      var a = document.createElement("a");
-      a.href = "https://wa.me/" + no + "?text=" + encodeURIComponent(teks);
-      a.target = "_blank"; a.rel = "noopener";
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    });
-    document.getElementById("gen-copy").addEventListener("click", function () { copyText(this, lastMsg); });
+  function muat() {
+    try {
+      var data = JSON.parse(localStorage.getItem(SIMPAN) || '{}');
+      ['t1', 't2', 'td'].forEach(function (id) {
+        if (data[id] !== undefined) document.getElementById(id).value = data[id];
+      });
+    } catch (e) { /* abaikan */ }
   }
 
-  slip();
-  cekTanggal();
-})();
-</script>
-<script>
-if ("serviceWorker" in navigator && location.protocol !== "file:") {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js").catch(function () {});
+  ['t1', 't2', 'td'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', hitungSemua);
   });
-}
+
+  document.getElementById('reset').addEventListener('click', function () {
+    ['t1', 't2', 'td'].forEach(function (id) { document.getElementById(id).value = ''; });
+    hitungSemua();
+  });
+
+  ['wa-tgl', 'wa-awal', 'wa-jam', 'wa-nomor'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', function () {
+      this.classList.remove('salah');
+      simpanWA();
+      perbaruiWA();
+    });
+  });
+  document.getElementById('sb-simpan').addEventListener('click', simpanStokSekarang);
+  document.getElementById('wa-kirim-teks').addEventListener('click', kirimTeks);
+  document.getElementById('wa-kirim-gambar').addEventListener('click', kirimGambar);
+
+  document.getElementById('tanggal-hari').textContent =
+    new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  muat();
+  muatWA();
+  hitungSemua();
+})();
 </script>
 </body>
 </html>
